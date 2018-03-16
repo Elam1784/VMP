@@ -1,0 +1,50 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrMaster : System.Web.UI.MasterPage
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            else
+            {
+                if (!IsPostBack)
+                {
+                    string qur = "Select firstName,isAdmin from Login where userId='" + Session["UserId"].ToString() + "'";
+                    DataSet ds = dbLibrary.idGetCustomResult(qur);
+                    string username = ds.Tables[0].Rows[0][0].ToString();
+                    bool isAdmin = bool.Parse(ds.Tables[0].Rows[0][1].ToString());
+                    if (isAdmin)
+                    {
+                        Session["isAdmin"] = true;
+                        lnkAdminPanel.Visible = true;
+                    }
+                    else
+                    {
+                        Session["isAdmin"] = false;
+                        lnkAdminPanel.Visible = false;
+                    }
+                    lblName.Text = "Hi " + username;
+                }
+            }
+        }
+        protected void btnLogout_Click(object sender, EventArgs e)
+        {
+            Session.Clear();
+
+            Response.Redirect("~/Logout.aspx");
+        }
+    }
+
+}

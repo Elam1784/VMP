@@ -1,0 +1,152 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrReport : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+        }
+
+        protected void ddlReportType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (ddlReportType.SelectedValue)
+            {
+                case "-1":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "1":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "Category";
+                    chkSubMenu.Items.Add(new ListItem("Goods", "1"));
+                    chkSubMenu.Items.Add(new ListItem("Services", "2"));
+                    chkSubMenu.Items.Add(new ListItem("Professional & Technical", "3"));
+                    chkSubMenu.Items.Add(new ListItem("Construction", "4"));
+                    break;
+
+                case "2":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "3":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "4":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "5":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "6":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "NAIC Code";
+                    string qur = "EXEC [proc_getNAICCode]";
+                    DataSet ds = dbLibrary.idGetCustomResult(qur);
+                    if (ds != null)
+                    {
+                        chkSubMenu.DataValueField = "naicId";
+                        chkSubMenu.DataTextField = "naicCode";
+                        chkSubMenu.DataSource = ds;
+                        chkSubMenu.DataBind();
+                        LoadSecondaryTooltip();
+                    }
+                    break;
+
+                case "7":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "County";
+                    string qurCounty = "EXEC [proc_getCounty]";
+                    DataSet dsCounty = dbLibrary.idGetCustomResult(qurCounty);
+                    if (dsCounty != null)
+                    {
+                        chkSubMenu.DataValueField = "regionId";
+                        chkSubMenu.DataTextField = "region";
+                        chkSubMenu.DataSource = dsCounty;
+                        chkSubMenu.DataBind();
+                    }
+                    break;
+
+                case "8":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "Specialist";
+                    string qurSpecialist = "EXEC [proc_getUserList]";
+                    DataSet dsSpecialist = dbLibrary.idGetCustomResult(qurSpecialist);
+                    if (dsSpecialist != null)
+                    {
+                        chkSubMenu.DataValueField = "userId";
+                        chkSubMenu.DataTextField = "Name";
+                        chkSubMenu.DataSource = dsSpecialist;
+                        chkSubMenu.DataBind();
+                        chkSubMenu.SelectedValue = Session["UserId"].ToString();
+                    }
+                    break;
+
+                case "9":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:block;margin-top:10px");
+                    break;
+
+                case "10":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "11":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "Application Type";
+                    chkSubMenu.Items.Add(new ListItem("Target Group", "1"));
+                    chkSubMenu.Items.Add(new ListItem("Veteran", "2"));
+                    chkSubMenu.Items.Add(new ListItem("EDR", "3"));
+                    break;
+            }
+        }
+        private void LoadSecondaryTooltip()
+        {
+            string qur = "EXEC [proc_getNAICCode]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds != null)
+            {
+                foreach (ListItem li in chkSubMenu.Items)
+                {
+                    foreach (DataRow dr in ds.Tables[0].Rows)
+                    {
+                        if (li.Value == dr.ItemArray[0].ToString())
+                        {
+                            li.Attributes.Add("data-placement", "right");
+                            li.Attributes.Add("class", "tooltips");
+                            li.Attributes.Add("title", dr.ItemArray[2].ToString());
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}

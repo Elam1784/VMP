@@ -1,0 +1,388 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="vmpUsrMaster.master.cs" Inherits="VMP_1._0.User.vmpUsrMaster" %>
+
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>VMP</title>
+    <link runat="server" rel="shortcut icon" href="../images/faviconLogo.ico" type="image/x-icon" />
+    <link runat="server" rel="icon" href="../images/faviconLogo.ico" type="image/ico" />
+    <script src="../Scripts/jquery-1.10.2.js"></script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=10" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="../Content/bootstrap.css" rel="stylesheet" />
+    <script type="text/javascript">
+        history.pushState(null, null, document.URL);
+        window.addEventListener('popstate', function () {
+            history.pushState(null, null, document.URL);
+        });
+    </script>
+
+    <%--<link href="../Content/progressbar.css" rel="stylesheet" />--%>
+
+    <style class="cp-pen-styles">
+        /* latin-ext */
+        ::-webkit-input-placeholder {
+            font-style: italic;
+        }
+
+        ::-moz-placeholder {
+            font-style: italic;
+        }
+
+        @font-face {
+            font-family: 'Lato';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Lato Regular'), local('Lato-Regular'), url(https://fonts.gstatic.com/s/lato/v13/UyBMtLsHKBKXelqf4x7VRQ.woff2) format('woff2');
+            /*src: local('Lato Regular'), local('Lato-Regular');*/
+            unicode-range: U+0100-024F, U+1E00-1EFF, U+20A0-20AB, U+20AD-20CF, U+2C60-2C7F, U+A720-A7FF;
+        }
+        /* latin */
+        @font-face {
+            font-family: 'Lato';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Lato Regular'), local('Lato-Regular'), url(https://fonts.gstatic.com/s/lato/v13/1YwB1sO8YE1Lyjf12WNiUA.woff2) format('woff2');
+            /*src: local('Lato Regular'), local('Lato-Regular');*/
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;
+        }
+
+        .navbar-brand {
+            padding: 0px;
+            margin: 0px 20px 0px 10px;
+        }
+
+        /*.navbar-brand > img {
+                margin: 0px 20px 0px 10px;
+            }*/
+        /* EXAMPLE 9 - Center with Flexbox and Text*/
+        .brand-centered {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
+        }
+
+            .brand-centered .navbar-brand {
+                display: -webkit-box;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-align: center;
+                -ms-flex-align: center;
+                align-items: center;
+            }
+
+        .navbar-toggle {
+            z-index: 1;
+        }
+        /* CSS Transform Align Navbar Brand Text ... This could also be achieved with table / table-cells */
+        .navbar-alignit .navbar-header {
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+            height: 50px;
+        }
+
+        .navbar-alignit .navbar-brand {
+            top: 50%;
+            display: block;
+            position: relative;
+            height: auto;
+            -webkit-transform: translate(0,-50%);
+            transform: translate(0,-50%);
+            margin-right: 15px;
+            margin-left: 15px;
+        }
+
+        .navbar-nav > li > .dropdown-menu {
+            z-index: 9999;
+        }
+
+        .logout {
+            color: #555;
+            font-size: 14px;
+        }
+
+            .logout:hover {
+                background-color: lightgrey !important;
+                color: black !important;
+                display: block !important;
+            }
+
+        body {
+            font-family: "Lato";
+        }
+    </style>
+    <style>
+        /*.bs-wizard {margin-top: 40px;}
+.bs-wizard {border-bottom: solid 1px #e0e0e0; padding: 0 0 10px 0;}
+.bs-wizard > .bs-wizard-step {padding: 0; position: relative;}
+.bs-wizard > .bs-wizard-step + .bs-wizard-step {}
+.bs-wizard > .bs-wizard-step .bs-wizard-stepnum {color: #595959; font-size: 16px; margin-bottom: 5px;}
+.bs-wizard > .bs-wizard-step .bs-wizard-info {color: #999; font-size: 14px;}
+.bs-wizard > .bs-wizard-step > .bs-wizard-dot {position: absolute; width: 30px; height: 30px; display: block; background: #fbe8aa; top: 45px; left: 50%; margin-top: -15px; margin-left: -15px; border-radius: 50%;} 
+.bs-wizard > .bs-wizard-step > .bs-wizard-dot:after {content: ' '; width: 14px; height: 14px; background: #fbbd19; border-radius: 50px; position: absolute; top: 8px; left: 8px; } 
+.bs-wizard > .bs-wizard-step > .progress1 {position: relative; border-radius: 0px; height: 8px; box-shadow: none; margin: 20px 0;}
+.bs-wizard > .bs-wizard-step > .progress1 > .progress-bar {width:0px; box-shadow: none; background: #fbe8aa;}
+.bs-wizard > .bs-wizard-step.complete > .progress1 > .progress-bar {width:100%;}
+.bs-wizard > .bs-wizard-step.complete > .bs-wizard-dot {background-color: #fbe8aa;}
+.bs-wizard > .bs-wizard-step.complete > .bs-wizard-dot:after {opacity: 0;}
+.bs-wizard > .bs-wizard-step.active > .progress1 > .progress-bar {width:100%;}
+.bs-wizard > .bs-wizard-step:first-child.active > .progress1 > .progress-bar {width:100%;}
+.bs-wizard > .bs-wizard-step:last-child.active > .progress1 > .progress-bar {width: 100%;}
+.bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot {background-color: #f5f5f5;}
+.bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot:after {opacity: 0;}
+.bs-wizard > .bs-wizard-step:first-child  > .progress1 {left: 50%; width: 100%;}
+.bs-wizard > .bs-wizard-step:last-child  > .progress1 {width: 50%;}
+.bs-wizard > .bs-wizard-step.disabled a.bs-wizard-dot{ pointer-events: none; }*/
+
+        .bs-wizard {
+            margin-top: 40px;
+        }
+
+        .bs-wizard {
+            border-bottom: solid 1px #e0e0e0;
+            padding: 0 0 10px 0;
+        }
+
+            .bs-wizard > .bs-wizard-step {
+                padding: 0;
+                position: relative;
+            }
+
+                .bs-wizard > .bs-wizard-step + .bs-wizard-step {
+                }
+
+                .bs-wizard > .bs-wizard-step .bs-wizard-stepnum {
+                    color: #595959;
+                    font-size: 13px;
+                    margin-bottom: 5px;
+                }
+
+                .bs-wizard > .bs-wizard-step .bs-wizard-info {
+                    color: #999;
+                    font-size: 14px;
+                }
+
+                .bs-wizard > .bs-wizard-step > .bs-wizard-dot {
+                    position: absolute;
+                    width: 30px;
+                    height: 30px;
+                    display: block;
+                    background: #fbe8aa;
+                    top: 45px;
+                    left: 50%;
+                    margin-top: -15px;
+                    margin-left: -15px;
+                    border-radius: 50%;
+                }
+
+                    .bs-wizard > .bs-wizard-step > .bs-wizard-dot:after {
+                        content: ' ';
+                        width: 14px;
+                        height: 14px;
+                        background: #fbbd19;
+                        border-radius: 50px;
+                        position: absolute;
+                        top: 8px;
+                        left: 8px;
+                    }
+
+                .bs-wizard > .bs-wizard-step > .progress {
+                    position: relative;
+                    border-radius: 0px;
+                    height: 8px;
+                    box-shadow: none;
+                    margin: 20px 0;
+                }
+
+                    .bs-wizard > .bs-wizard-step > .progress > .progress-bar {
+                        width: 0px;
+                        box-shadow: none;
+                        background: #fbe8aa;
+                    }
+
+                .bs-wizard > .bs-wizard-step.complete > .progress > .progress-bar {
+                    width: 100%;
+                }
+
+                .bs-wizard > .bs-wizard-step.complete > .bs-wizard-dot {
+                    background-color: #fbe8aa;
+                }
+
+                    .bs-wizard > .bs-wizard-step.complete > .bs-wizard-dot:after {
+                        opacity: 0;
+                    }
+
+                .bs-wizard > .bs-wizard-step.active > .progress > .progress-bar {
+                    width: 50%;
+                }
+
+                .bs-wizard > .bs-wizard-step:first-child.active > .progress > .progress-bar {
+                    width: 0%;
+                }
+
+                .bs-wizard > .bs-wizard-step:last-child.active > .progress > .progress-bar {
+                    width: 100%;
+                }
+
+                .bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot {
+                    background-color: #f5f5f5;
+                }
+
+                    .bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot:after {
+                        opacity: 0;
+                    }
+
+                .bs-wizard > .bs-wizard-step:first-child > .progress {
+                    left: 50%;
+                    width: 50%;
+                }
+
+                .bs-wizard > .bs-wizard-step:last-child > .progress {
+                    width: 50%;
+                }
+
+                .bs-wizard > .bs-wizard-step.disabled a.bs-wizard-dot {
+                    pointer-events: none;
+                }
+
+                .bs-wizard > .bs-wizard-step.activecomplete > .progress {
+                    background-color: #fbe8aa;
+                }
+
+                .bs-wizard > .bs-wizard-step.lastcomplete > .progress > .progress-bar {
+                    width: 50%;
+                }
+    </style>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="regexpEmailForm" runat="server" autocomplete="off">
+        <script type="text/javascript">
+            $('#myModal').on('shown.bs.modal', function () {
+                $('#txtCurrent').focus()
+            })
+        </script>
+        <div>
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar7">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <img class="navbar-brand" src="../images/Logo.ico" alt="Vendor Management" />
+                    </div>
+                    <div id="navbar7" class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav navbar-left">
+                            <li class="active"><a href="vmpUsrHome.aspx">Home</a></li>
+                            <li id="menu" class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Vendor <span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="vmpUsrVendor1.aspx">Add New Vendor</a></li>
+                                    <li><a href="manageVendor.aspx">Manage Vendor</a></li>
+                                    <%--<li><a href="#">Letters</a></li>--%>
+                                    <li><a href="vmpUsrReport.aspx">Reports</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li>
+                                <asp:LinkButton ID="lnkAdminPanel" runat="server" CssClass="btn btn-sm logout" Visible="false" PostBackUrl="~/Admin/vmpAdmHome.aspx" Style="text-align: left;"> 
+                                    <span aria-hidden="true" class="glyphicon glyphicon-user"></span> Admin Panel
+                                </asp:LinkButton>
+                            </li>
+                            <li>
+                                <%-- <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">--%>
+                                <asp:Label ID="lblName" runat="server" Style="float: left;" Visible="false"></asp:Label>
+                                <a href="#" style="cursor: default; text-align: left"><%=lblName.Text%></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#" data-toggle="modal" data-target="#myModal" data-backdrop="static" data-keyboard="false">Change Password</a></li>
+                                </ul>
+                            </li>
+                            <%-- <li>
+                                <asp:Label ID="lblName" runat="server" Style="display: block; margin: 15px;"></asp:Label></li>
+                            <li>--%>
+                            <li>
+                                <asp:LinkButton ID="btnLogout" runat="server" CssClass="btn btn-sm logout" OnClick="btnLogout_Click" Style="text-align: left;"> 
+                        <span aria-hidden="true" class="glyphicon glyphicon-off"></span> Logout
+                                </asp:LinkButton></li>
+                        </ul>
+                    </div>
+                    <!--/.nav-collapse -->
+                </div>
+                <!--/.container-fluid -->
+            </nav>
+        </div>
+        <div style="display: none; text-align: center" id="myMessage" runat="server" class="alert alert-success col-sm-12">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <asp:Label ID="lblError" runat="server" Text="Saved Successfully"></asp:Label>
+        </div>
+       <%-- <div class="modal fade" id="modalSession" role="dialog" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">x</button>
+                        <h5 class="modal-title">Session Expire Warning<b></h5>
+                    </div>
+                    <div class="modal-body" style="text-align: center">
+                        <label>
+                            Your session will expire in&nbsp;<span id="seconds"></span>&nbsp;seconds.
+                            <br />
+                            Please save any unsaved data</label>
+                    </div>
+                    <div class="modal-footer" style="text-align:center !important">
+                        <button id="btnReset" class="btn btn-primary" data-dismiss="modal">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>--%>
+        <script type="text/javascript">
+            function SessionExpireAlert(timeout) {
+                var seconds = timeout / 1000;
+                setInterval(function () {
+                    seconds--;
+                }, 1000);
+                setTimeout(function () {
+                    alert("Your session will expire in approx. 2 Minute. Please save your unsaved data.")
+                    window.focus();
+                }, timeout - 120 * 1000);
+                setTimeout(function () {
+                    window.location = "../SessionExpired.html";
+                }, timeout);
+            };
+        </script>
+
+        <script type="text/javascript">
+            function runEffect() {
+                $("#myMessage").show();
+                setTimeout(function () {
+                    var selectedEffect = 'blind';
+                    var options = {};
+                    $("#myMessage").hide();
+                }, 5000);
+                return false;
+            }
+        </script>
+
+        <div>
+            <%--<h3>Session Idle:&nbsp;<span id="secondsIdle"></span>&nbsp;seconds.</h3>--%>
+            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+            </asp:ContentPlaceHolder>
+        </div>
+    </form>
+</body>
+</html>

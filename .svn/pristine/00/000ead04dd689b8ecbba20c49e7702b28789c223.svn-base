@@ -1,0 +1,76 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="AccessDenied.aspx.cs" Inherits="VMP_1._0.AccessDenied" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+     <link href="Content/bootstrap.css" rel="stylesheet" />
+    <style class="cp-pen-styles">
+        .navbar-brand {
+            padding: 0px;
+            margin: 0px 20px 0px 10px;
+        }
+        .brand-centered {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
+        }
+
+            .brand-centered .navbar-brand {
+                display: -webkit-box;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-align: center;
+                -ms-flex-align: center;
+                align-items: center;
+            }
+
+        .navbar-alignit .navbar-header {
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+            height: 50px;
+        }
+
+        .navbar-alignit .navbar-brand {
+            top: 50%;
+            display: block;
+            position: relative;
+            height: auto;
+            -webkit-transform: translate(0,-50%);
+            transform: translate(0,-50%);
+            margin-right: 15px;
+            margin-left: 15px;
+        }
+    </style>
+</head>
+<body>
+    <form id="form1" runat="server">
+         <div>
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <img class="navbar-brand" src="images/Logo.ico" alt="Vendor Management" />
+                    </div>
+                     <div id="navbar7" class="navbar-collapse collapse">
+                         </div>
+                </div>
+            </nav>
+        </div>
+     <div style="margin-top:13%;">
+            <div style="text-align:center;color:red;"><h1>ACCESS DENIED</h1></div>
+            <div style="text-align:center;">
+                <img style="width:12%;" src="images/abort-146072_960_720.png" /></div>
+            <div style="text-align:center;"><h3>If you think you are authorised and you are getting this error message please contact admin for more details or <a href="Login.aspx">Login </a> again</h3></div>
+        </div>
+    </form>
+</body>
+</html>

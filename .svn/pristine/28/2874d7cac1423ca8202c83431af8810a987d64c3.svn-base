@@ -1,0 +1,212 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/vmpUsrMaster.Master" AutoEventWireup="true" CodeBehind="vmpUsrStatus.aspx.cs" Inherits="VMP_1._0.User.vmpUsrStatus" validateRequest="false" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <style>
+        label {
+            font-weight: normal;
+            margin-top: 5px;
+        }
+    </style>
+    <script type="text/javascript" src="../tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
+    <script type="text/javascript">
+        tinyMCE.init({
+            mode: "specific_textareas",
+            editor_selector: "mytexteditor",
+            //mode: "textareas",
+            theme: "advanced",
+            plugins: "safari,spellchecker,pagebreak,style,layer,table,save,advhr,advimage,advlink,emotions,iespell,inlinepopups,insertdatetime,preview,media,searchreplace,print,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template,imagemanager,filemanager",
+            theme_advanced_buttons1: "save,newdocument,print,|,bold,italic,underline,strikethrough,hr,removeformat,|,justifyleft,justifycenter,justifyright,justifyfull,|,styleselect,formatselect,fontselect,fontsizeselect",
+            theme_advanced_buttons2: "cut,copy,paste,pastetext,pasteword,|,search,replace,|,bullist,numlist,|,undo,redo,|,insertdate,inserttime,preview,|,forecolor,backcolor",
+            theme_advanced_buttons3: "fullscreen",
+            theme_advanced_toolbar_location: "top",
+            theme_advanced_toolbar_align: "left",
+            theme_advanced_statusbar_location: "bottom",
+            theme_advanced_resizing: false,
+            template_external_list_url: "js/template_list.js",
+            external_link_list_url: "js/link_list.js",
+            external_image_list_url: "js/image_list.js",
+            media_external_list_url: "js/media_list.js"
+        });
+    </script>
+    <script type="text/javascript">
+        function showModal() {
+            jQuery.noConflict();
+            $("#myModal").modal('show');
+        }
+    </script>
+     <script type="text/javascript">
+        function showModalRulesView() {
+            jQuery.noConflict();
+            $("#ModalRulesView").modal('show');
+        }
+    </script>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <div class="container" style="background-color: gainsboro; border-radius: 6px;">
+        <div class="row" style="text-align: center">
+            <h3>Certification Status</h3>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-md-12" style="text-align: center">
+                <h3>
+                    <asp:Label ID="lblStatus" runat="server" Text="Pending" Style="color: red"></asp:Label></h3>
+            </div>
+        </div>
+        <div class="row">
+            <div id="divOtherAppType" class="col-md-12" style="display: none; text-align: center" runat="server">
+                <asp:Label ID="lblAppType" runat="server" Style="color: black; text-align: center; color: chocolate;"></asp:Label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12" style="text-align: center">
+                <asp:LinkButton ID="lnkRules" runat="server" OnClick="lnkRules_Click">Rules View <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></asp:LinkButton>
+            </div>
+        </div>
+        <hr />
+        <div class="row" style="text-align: center">
+            <h4>Recommendation</h4>
+        </div>
+        <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="col-md-3"></div>
+            <div class="col-md-6" style="text-align: center">
+                <div class="col-md-12">
+                    <asp:Button ID="btnRecommend" runat="server" CssClass="btn btn-primary" Text="Recommendation" OnClick="btnRecommend_Click" />
+                </div>
+                <div class="col-md-12">
+                    <label>(Click Recommendation to Override the Certification Status)</label>
+                </div>
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+
+        <hr />
+        <div class="row" style="text-align: center">
+            <h4>Letters</h4>
+        </div>
+        <%--<br />--%>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="col-md-4">
+                    <div class="col-md-8"></div>
+                    <div class="col-md-4">
+                        <label>Select Letter</label>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <asp:DropDownList ID="ddlLetters" runat="server" CssClass="form-control">
+                        <asp:ListItem>--Select--</asp:ListItem>
+                        <asp:ListItem>CERT EDR(Products & Services)</asp:ListItem>
+                        <asp:ListItem>CERT VT(Products & Services)</asp:ListItem>
+                        <asp:ListItem>Additional Info</asp:ListItem>
+                    </asp:DropDownList>
+                </div>
+                <div class="col-md-3"></div>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="col-md-4"></div>
+            <div class="col-md-4" style="text-align: center">
+                <asp:Button ID="btnLoad" runat="server" CssClass="btn btn-primary" Text="Load To Editor" OnClick="btnLoad_Click" />
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <div class="row" id="divEditor" runat="server" style="display: none;">
+            <div class="col-md-12">
+                <asp:TextBox ID="txtEditor" runat="server" TextMode="MultiLine" Columns="150" Rows="50" CssClass="form-control mytexteditor"></asp:TextBox>
+            </div>
+        </div>
+        <div class="row" id="divError" runat="server" style="display: none">
+            <div class="col-md-12" style="text-align: center;">
+                <asp:Label ID="lblError" runat="server" Style="color: red"></asp:Label>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 20px; margin-bottom: 20px;">
+            <div class="col-md-4"></div>
+            <div class="col-md-4" style="text-align: center">
+                <asp:Button ID="btnSendLetter" runat="server" CssClass="btn btn-primary" Text="Send Letter" />
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    </div>
+
+    <%--Modal Recommendataion Begin--%>
+    <div class="modal fade" id="myModal" role="dialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Recommendation</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="col-md-3">
+                                <asp:RadioButton ID="radbtnApprove" runat="server" Text="Approve" CssClass="radio radio-inline" GroupName="b" />
+                            </div>
+                            <div class="col-md-3">
+                                <asp:RadioButton ID="radbtnDeny" runat="server" Text="Deny" CssClass="radio radio-inline" GroupName="b" />
+                            </div>
+                            <div class="col-md-3">
+                                <asp:RadioButton ID="radbtnPending" runat="server" Text="Pending" CssClass="radio radio-inline" GroupName="b" />
+                            </div>
+                            <div class="col-md-3">
+                                <asp:RadioButton ID="radbtnRemove" runat="server" Text="Remove" CssClass="radio radio-inline" GroupName="b" />
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="col-md-3">
+                                <label style="margin-top: 25%;">Override Reason</label>
+                            </div>
+                            <div class="col-md-8">
+                                <asp:TextBox ID="txtOverrideReason" runat="server" CssClass="form-control" TextMode="MultiLine" Style="width: 100%; border-top-right-radius: 4px; border-bottom-right-radius: 4px; height: 90px;"></asp:TextBox>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="col-md-3"></div>
+                            <div class="col-md-8">
+                                <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server" ErrorMessage="Reason Cannont Be Blank" ValidationGroup="r" ControlToValidate="txtOverrideReason" Style="color: red;"></asp:RequiredFieldValidator>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <asp:Button ID="btnOverRide" runat="server" Text="Override" CssClass="btn btn-primary" ValidationGroup="r" />
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%--Modal Recommendataion End--%>
+
+    <%--Modal Rules View--%>
+    <div class="modal fade" id="ModalRulesView" role="dialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Rules View</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <asp:GridView ID="grdRulesView" runat="server" AutoGenerateColumns="false" HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-ForeColor="White" Style="width: 100%; margin-bottom: 10px;" EmptyDataRowStyle-BorderColor="White">
+                                <Columns>
+                                    <asp:BoundField DataField="description" HeaderText="Rule Description" HeaderStyle-HorizontalAlign="Center" />
+                                    <asp:BoundField DataField="status" HeaderText="Activity" HeaderStyle-HorizontalAlign="Center" />
+                                </Columns>
+                                <EmptyDataTemplate>
+                                    <label style="color: red;">No Data Found</label>
+                                </EmptyDataTemplate>
+                            </asp:GridView>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%--Modal Rules View End--%>
+</asp:Content>

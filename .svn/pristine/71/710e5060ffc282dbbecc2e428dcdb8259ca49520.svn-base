@@ -1,0 +1,209 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Admin/vmpAdmMaster.Master" AutoEventWireup="true" CodeBehind="vmpAdmEmailTemplate.aspx.cs" Inherits="VMP_1._0.Admin.vmpAdmEmailTemplate" EnableEventValidation="false" ValidateRequest="false" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <style>
+        label {
+            font-weight: normal;
+            margin-top: 5px;
+        }
+
+        #mceu_1 {
+            display: none !important;
+        }
+
+        #mceu_7 {
+            display: none !important;
+        }
+
+        #title {
+            display: none !important;
+        }
+
+        #mceu_23 {
+            display: none !important;
+        }
+
+        .mce-panel {
+            border-width: 1px !important;
+        }
+
+        .table1 tr, td, th {
+            text-align: left !important;
+        }
+    </style>
+    <script type="text/javascript">
+        function runEffect1() {
+            $("#<%=myMessage1.ClientID%>").show();
+            setTimeout(function () {
+                var selectedEffect = 'blind';
+                var options = {};
+                $("#<%=myMessage1.ClientID%>").hide();
+            }, 5000);
+            return false;
+        }
+    </script>
+    <script src="../tinymce/js/tinymce/tinymce.min.js"></script>
+    
+    <script>
+        
+    </script>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <script type="text/javascript">
+        $(document).ready(function () {
+            /* initial load of editor */
+            LoadTinyMCE();
+             });
+
+      /* wire-up an event to re-add the editor */     
+      Sys.WebForms.PageRequestManager.getInstance().add_endRequest(EndRequestHandler_Page);
+      
+      /* fire this event to remove the existing editor and re-initialize it*/
+      function EndRequestHandler_Page(sender, args) {
+        //1. Remove the existing TinyMCE instance of TinyMCE
+        tinymce.remove( "#<%=txtBody.ClientID%>");
+        //2. Re-init the TinyMCE editor
+          LoadTinyMCE();
+        //  alert('working');
+          $('.mce-statusbar').hide();
+        //  $('.mce-last').hide();
+      }
+
+      function BeforePostback() {
+         // alert('working');
+        tinymce.triggerSave();
+      }
+      function LoadTinyMCE() {
+          tinymce.init({
+              mode: "specific_textareas",
+              editor_selector: "myTextEditor",
+              menubar: false,
+              height: "250",
+              width: "100%",
+              plugins: [
+                'advlist autolink lists link image charmap print preview anchor textcolor',
+                'searchreplace visualblocks code fullscreen',
+                'insertdatetime media table contextmenu paste code help'
+              ],
+              toolbar: 'undo redo |  bold italic backcolor  | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat',
+              content_css: [
+                '//fonts.googleapis.com/css?family=Lato:300,300i,400,400i',
+                '//www.tinymce.com/css/codepen.min.css']
+          });
+      }
+    </script>
+    <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
+    <div style="display: none; text-align: center" id="myMessage1" runat="server" class="alert alert-success col-sm-12">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <asp:Label ID="lblError" runat="server" Text="Saved Successfully"></asp:Label>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <div class="input-group" style="margin: 0 auto;">
+                    <h4>Add/Edit e-mail Templates</h4>
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+       <%-- <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
+            <ContentTemplate>--%>
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4" style="text-align: center">
+                        <asp:Button ID="btnNew" runat="server" CssClass="btn btn-primary" Text="New" OnClick="btnNew_Click" />
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+                <div class="row" style="margin-top: 20px">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="col-md-3">
+                            </div>
+                            <div class="col-md-2">
+                                <label>Select Letter</label>
+                            </div>
+                            <div class="col-md-4">
+                                <asp:DropDownList ID="ddlLetters" runat="server" CssClass="form-control" OnSelectedIndexChanged="ddlLetters_SelectedIndexChanged" AutoPostBack="true">
+                                    <asp:ListItem Value="-1">--Select--</asp:ListItem>
+                                    <asp:ListItem Value="ADDL INFO">ADDL INFO</asp:ListItem>
+                                    <asp:ListItem Value="CERT ED(Products&Services)">CERT ED(Products & Services)</asp:ListItem>
+                                    <asp:ListItem Value="CERT ED(Prof&Tech)">CERT ED (Prof Tech)</asp:ListItem>
+                                    <asp:ListItem Value="CERT TG(Products&Services)">CERT TG (Products Services)</asp:ListItem>
+                                    <asp:ListItem Value="CERT TG(Prof&Tech)">CERT TG (Prof Tech)</asp:ListItem>
+                                    <asp:ListItem Value="DENY">DENY</asp:ListItem>
+                                    <asp:ListItem Value="GRADUATE">GRADUATE</asp:ListItem>
+                                    <asp:ListItem Value="OUT70">OUT70</asp:ListItem>
+                                    <asp:ListItem Value="OUTLSA">OUTLSA</asp:ListItem>
+                                    <asp:ListItem Value="RECERT APPR">RECERT APPR</asp:ListItem>
+                                    <asp:ListItem Value="RECERT REQ">RECERT REQ</asp:ListItem>
+                                    <asp:ListItem Value="REMOVAL-Failure to Recert">REMOVAL - Failure to Recert</asp:ListItem>
+                                    <asp:ListItem Value="SD FED CERT(Products&Services)">SD FED CERT (Products  Services)</asp:ListItem>
+                                    <asp:ListItem Value="SD FED CERT(Prof&Tech)">SD FED CERT (Prof Tech)</asp:ListItem>
+                                    <asp:ListItem Value="SD FED REMOVAL">SD FED REMOVAL</asp:ListItem>
+                                    <asp:ListItem Value="SD MN CERT(Products&Services)">SD MN CERT (Products  Services)</asp:ListItem>
+                                    <asp:ListItem Value="SD MN CERT(Prof&Tech)">SD MN CERT (Prof Tech)</asp:ListItem>
+                                    <asp:ListItem Value="VO FED CERT(Products&Services)">VO FED CERT (Products Services)</asp:ListItem>
+                                    <asp:ListItem Value="VO FED CERT(Prof&Tech)">VO FED CERT (Prof Tech)</asp:ListItem>
+                                    <asp:ListItem Value="VO FED REMOVAL">VO FED REMOVAL</asp:ListItem>
+                                    <asp:ListItem Value="VO MN CERT(Products&Services)">VO MN CERT (Products Services)</asp:ListItem>
+                                    <asp:ListItem Value="VO MN CERT Template(Prof&Tech)">VO MN CERT Template (Prof Tech)</asp:ListItem>
+                                </asp:DropDownList>
+                            </div>
+                            <div class="col-md-3"></div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-12">
+                            <div class="col-md-3"></div>
+                            <div class="col-md-2">
+                                <label>email body</label>
+                            </div>
+                            <div class="col-md-4">
+                                <asp:TextBox ID="txtBody" runat="server" TextMode="MultiLine" CssClass="form-control myTextEditor" MaxLength="500"></asp:TextBox>
+                            </div>
+                            <div class="col-md-3"></div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-12" style="text-align: center">
+                            <asp:Label ID="lblErrorSave" runat="server" Style="color: red;" Visible="false"></asp:Label>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-12" style="text-align: center">
+                            <asp:Button ID="btnSave" runat="server" Text="Save" CssClass="btn btn-primary" OnClick="btnSave_Click" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="divView" runat="server" style="margin-top: 30px; display: none">
+                    <div class="row">
+                        <div class="col-md-4"></div>
+                        <div class="col-md-4">
+                            <div class="input-group" style="margin: 0 auto;">
+                                <h4>View e-mail Templates</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-8" style="text-align: center">
+                                <asp:GridView ID="grdeMail" runat="server" CssClass="table1" AutoGenerateColumns="false" OnRowDataBound="grdeMail_RowDataBound" OnSelectedIndexChanged="grdeMail_SelectedIndexChanged" DataKeyNames="eMailId" HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-ForeColor="White" Style="width: 100%;">
+                                    <Columns>
+                                        <asp:BoundField DataField="letterType" HeaderText="Letter" HeaderStyle-HorizontalAlign="Center" HeaderStyle-Width="150px" HtmlEncode="false" />
+                                        <asp:BoundField DataField="eMailBody" HeaderText="email Body" HeaderStyle-HorizontalAlign="Center" HtmlEncode="false" />
+                                        <asp:BoundField DataField="eMailId" HeaderText="eMailId" HeaderStyle-HorizontalAlign="Center" Visible="false" />
+                                    </Columns>
+                                </asp:GridView>
+                            </div>
+                            <div class="col-md-2"></div>
+                        </div>
+                    </div>
+                </div>
+            <%--</ContentTemplate>
+        </asp:UpdatePanel>--%>
+    </div>
+</asp:Content>

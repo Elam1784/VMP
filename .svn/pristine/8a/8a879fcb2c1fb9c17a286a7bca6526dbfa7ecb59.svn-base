@@ -1,0 +1,530 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/vmpUsrMaster.Master" AutoEventWireup="true" CodeBehind="vmpUsrHome.aspx.cs" Inherits="VMP_1._0.User.vmpUsrHome" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <style>
+        .chart {
+            width: 100%;
+            min-height: 270px;
+            margin: -5px;
+        }
+
+        .chartLast {
+            width: 100%;
+            min-height: 200px;
+            margin: -5px;
+        }
+
+        .borderleft {
+            border-left: 1px;
+            border-left-color: gainsboro;
+            border-left-style: outset;
+        }
+
+        .grid td, .grid th {
+            text-align: center !important;
+            font-weight: normal !important;
+        }
+
+        label {
+            font-weight: normal !important;
+        }
+
+        .customgrid {
+            border-color: antiquewhite;
+            border-style: solid;
+            border-width: 1px;
+            background-color: #ECF4FE;
+            color: gray;
+        }
+         .customgridvalue {
+            height:27px;
+        }
+    </style>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <asp:HiddenField ID="hdnPT" runat="server" Value="0" />
+    <asp:HiddenField ID="hdnGoods" runat="server" Value="0" />
+    <asp:HiddenField ID="hdnConstruction" runat="server" Value="0" />
+    <asp:HiddenField ID="hdnServices" runat="server" Value="0" />
+    <div style="display: none; text-align: center" id="myMessage" runat="server" class="alert alert-success col-sm-12">
+        <asp:Label ID="lblError" runat="server" Text="Vendor Details Saved Successfully"></asp:Label>
+    </div>
+    <div class="container">
+        <div class="row">
+            <h2><b>Statistics</b></h2>
+        </div>
+        <%--<div class="row" style="background-color: gainsboro; border-radius: 6px;height:825px">
+            <div class="col-md-12" style="margin-top: 10px; margin-bottom: 10px;">
+                <div class="col-md-6">
+                    <div style="width: 540px; height: 250px; background-color: white;text-align:center">
+                        Tool 1
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div style="width: 540px; height: 250px; background-color: white;text-align:center">
+                        Tool 2
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12" style="margin-top: 275px; margin-bottom:10px;">
+                <div class="col-md-6">
+                    <div style="width: 540px; height: 250px; background-color: white;text-align:center">
+                        Tool 3
+                    </div>
+                </div>
+                <div class="col-md-6" id="piechart_3d">
+
+                </div>
+            </div>
+            <div class="col-md-12" style="margin-top: 275px; margin-bottom: 10px;">
+                <div class="col-md-6">
+                    <div style="width: 540px; height: 250px; background-color: white;text-align:center">
+                        <asp:GridView ID="grdAvgStat" runat="server" CssClass="grid" AllowSorting="true" AllowPaging="true" PageSize="10" AutoGenerateColumns="false" ShowHeader="false" Style="width: 100%; text-align: center; margin-bottom: 10px;" BackColor="White" EmptyDataRowStyle-BorderColor="White">
+                            <Columns>
+                                <asp:TemplateField>
+                                    <ItemTemplate>
+                                        <label style="color: darkblue;">Average number of days for application review</label></ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:BoundField DataField="AvgDays" HeaderStyle-HorizontalAlign="Center" />
+                            </Columns>
+                            <EmptyDataTemplate>
+                                <label style="color: red;">No Data Found</label>
+                            </EmptyDataTemplate>
+                        </asp:GridView>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div style="width: 540px; height: 250px; background-color: white;text-align:center">
+                        <asp:GridView ID="grdMonthStat" runat="server" CssClass="grid" AllowSorting="true" AllowPaging="true" PageSize="10" AutoGenerateColumns="false" ShowHeader="false" Style="width: 100%; text-align: center; margin-bottom: 10px;" BackColor="White" EmptyDataRowStyle-BorderColor="White">
+                            <Columns>
+                                <asp:BoundField DataField="Month" HeaderStyle-HorizontalAlign="Center" />
+                                <asp:BoundField DataField="TotalCount" HeaderStyle-HorizontalAlign="Center" />
+                            </Columns>
+                            <EmptyDataTemplate>
+                                <label style="color: red;">No Data Found</label>
+                            </EmptyDataTemplate>
+                        </asp:GridView>
+                    </div>
+                </div>
+            </div>
+        </div>--%>
+        <div class="row" style="border-radius: 6px; border: 1px solid; border-color: gainsboro; margin-bottom: 30px">
+            <div class="row" style="margin-top: 20px;">
+                <div class="col-md-6">
+                    <div id="chart_div1" class="chart">
+                        <div class="col-md-12">
+                            <h4 style="text-align: center; color: #6794CE; margin-top: 15px;"><b>Vendors In Progress</b></h4>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="col-md-1"></div>
+                            <div class="col-md-10">
+                                <asp:GridView ID="grdProgress" runat="server" CssClass="grid" HeaderStyle-BackColor="#6794ce" PagerStyle-BackColor="#ECF4FE" PagerStyle-ForeColor="Gray" AlternatingRowStyle-BackColor="White" BorderColor="AntiqueWhite" RowStyle-BackColor="#ECF4FE" HeaderStyle-ForeColor="White" RowStyle-ForeColor="Gray" AllowSorting="true" AllowPaging="true" PageSize="8" AutoGenerateColumns="false" ShowHeader="true" Style="width: 100%; text-align: center; margin-bottom: 10px;" BackColor="White" EmptyDataRowStyle-BorderColor="White" OnPageIndexChanging="grdProgress_PageIndexChanging" OnRowDataBound="grdProgress_RowDataBound">
+                                    <Columns>
+                                        <asp:BoundField DataField="vendorName" HeaderText="Vendor Name" HeaderStyle-HorizontalAlign="Center" ItemStyle-Font-Bold="true" />
+                                        <asp:BoundField DataField="addedDateTime" HeaderText="Added Date" DataFormatString="{0:d}" HeaderStyle-HorizontalAlign="Center" />
+                                        <asp:BoundField DataField="DaysSinceArrived" HeaderText="Days Since Application Arrived" HeaderStyle-HorizontalAlign="Center" />
+                                    </Columns>
+                                    <EmptyDataTemplate>
+                                        <label style="color: red;">No Data Found</label>
+                                    </EmptyDataTemplate>
+                                </asp:GridView>
+                            </div>
+                            <div class="col-md-1"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 borderleft">
+                    <div id="chart_div2" class="chart">
+                        <div class="col-md-12">
+                            <h4 style="text-align: center; color: #6794CE; margin-top: 15px;"><b>Vendors Due to be Re-Certified</b></h4>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="col-md-1"></div>
+                            <div class="col-md-10">
+                                <asp:GridView ID="grdReCert" runat="server" CssClass="grid" HeaderStyle-BackColor="#6794ce" PagerStyle-BackColor="#ECF4FE" PagerStyle-ForeColor="Gray" AlternatingRowStyle-BackColor="White" BorderColor="AntiqueWhite" RowStyle-BackColor="#ECF4FE" HeaderStyle-ForeColor="White" RowStyle-ForeColor="Gray" AllowSorting="true" AllowPaging="true" PageSize="10" AutoGenerateColumns="false" ShowHeader="true" Style="width: 100%; text-align: center; margin-bottom: 10px;" BackColor="White" EmptyDataRowStyle-BorderColor="White" OnPageIndexChanging="grdReCert_PageIndexChanging" OnRowDataBound="grdReCert_RowDataBound">
+                                    <Columns>
+                                        <asp:BoundField DataField="vendorName" HeaderText="Vendor Name" HeaderStyle-HorizontalAlign="Center" ItemStyle-Font-Bold="true" />
+                                        <asp:BoundField DataField="nextCertDate" HeaderText="Due Date" DataFormatString="{0:d}" HeaderStyle-HorizontalAlign="Center" />
+                                        <asp:BoundField DataField="DaysForRecert" HeaderText="Days Due to be Certified" HeaderStyle-HorizontalAlign="Center" />
+                                    </Columns>
+                                    <EmptyDataTemplate>
+                                        <label style="color: red;">No Data Found</label>
+                                    </EmptyDataTemplate>
+                                </asp:GridView>
+                            </div>
+                            <div class="col-md-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="row" style="margin-top: 20px;">
+                <div class="col-md-6">
+                    <div id="chart_div3" class="chart">
+                        <div class="col-md-12">
+                            <h4 style="text-align: center; color: #6794CE;"><b>Vendors By Designation</b></h4>
+                        </div>
+                        <div class="col-md-12" style="margin-top: 20px">
+                            <div class="row" style="margin-top: 10px">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5 customgrid">
+                                    <label>Minority</label>
+                                    <asp:LinkButton ID="lnkMinorityDetails" runat="server" Text="(+)" CssClass="btn-link" OnClick="lnkMinorityDetails_Click"></asp:LinkButton>
+                                </div>
+                                <div class="col-md-1 customgrid customgridvalue">
+                                    <asp:Label ID="lblMinority" runat="server" Text="10"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5 customgrid">
+                                    <label>Women</label>
+                                </div>
+                                <div class="col-md-1 customgrid customgridvalue">
+                                    <asp:Label ID="lblWomen" runat="server" Text="10"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5 customgrid">
+                                    <label>Disabled</label>
+                                </div>
+                                <div class="col-md-1 customgrid customgridvalue">
+                                    <asp:Label ID="lblDisabled" runat="server" Text="10"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5 customgrid">
+                                    <label>Economically Disadvantaged</label>
+                                    <asp:LinkButton ID="lnkEDRDetails" runat="server" Text="(+)" CssClass="btn-link" OnClick="lnkEDRDetails_Click"></asp:LinkButton>
+
+                                </div>
+                                <div class="col-md-1 customgrid customgridvalue">
+                                    <asp:Label ID="lblEDR" runat="server" Text="10"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5 customgrid">
+                                    <label>Veteran</label>
+                                    <asp:LinkButton ID="lnkbtnVeteranDetails" runat="server" Text="(+)" CssClass="btn-link" OnClick="lnkbtnVeteranDetails_Click"></asp:LinkButton>
+                                </div>
+                                <div class="col-md-1 customgrid customgridvalue">
+                                    <asp:Label ID="lblVeteran" runat="server" Text="10"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5 customgrid">
+                                  <label style="color:black">Total</label>
+                                </div>
+                                <div class="col-md-1 customgrid customgridvalue">
+                                   <asp:Label ID="lblTotal" runat="server" Text="10" style="color:black;"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 borderleft">
+                    <h4 style="text-align: center; color: #6794CE;"><b>Vendor Categories</b></h4>
+                    <div id="chart_div4" class="chart">
+                    </div>
+                </div>
+            </div>
+            <hr />
+            <div class="row" style="margin-top: 20px;">
+                <div class="col-md-6">
+                    <div id="chart_div5" class="chartLast">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="col-md-1"></div>
+                                <div class="col-md-10">
+                                    <h4 style="text-align: center; color: #6794CE;"><b>Level of Service</b></h4>
+                                    <h5 style="text-align: center">Average No# of Days for Application Review</h5>
+                                    <div class="row">
+                                        <div class="col-md-2"></div>
+                                        <div class="col-md-6 customgrid">
+                                            <label>Avg of All Specialists</label>
+                                        </div>
+                                        <div class="col-md-2 customgrid customgridvalue" style="text-align: center;">
+                                            <asp:Label ID="lblAvgAll" runat="server" />
+                                        </div>
+                                        <div class="col-md-2"></div>
+                                    </div>
+                                    <div class="row" id="divAvgYours" runat="server" style="margin-top:10px;">
+                                        <div class="col-md-2"></div>
+                                        <div class="col-md-6 customgrid">
+                                                <%--<asp:Label ID="lblSpecialistName" runat="server" Text="Your's"></asp:Label>--%>
+                                            <label>Your's</label>
+
+                                        </div>
+                                        <div class="col-md-2 customgrid customgridvalue" style="text-align:center">
+                                            <asp:Label ID="lblAvgSpecialist" runat="server" />
+                                        </div>
+                                        <div class="col-md-2"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4 style="text-align: center; color: #6794CE;"><b>Applications By Month</b></h4>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-6">
+                                    <asp:GridView ID="grdMonthStat" runat="server" CssClass="grid" HeaderStyle-BackColor="#6794ce" PagerStyle-BackColor="#ECF4FE" PagerStyle-ForeColor="Gray" AlternatingRowStyle-BackColor="White" BorderColor="AntiqueWhite" RowStyle-BackColor="#ECF4FE" HeaderStyle-ForeColor="White" RowStyle-ForeColor="Gray" AllowSorting="true" AllowPaging="true" PageSize="10" AutoGenerateColumns="false" ShowHeader="true" Style="width: 100%; text-align: center; margin-bottom: 10px;" BackColor="White" EmptyDataRowStyle-BorderColor="White" OnRowDataBound="grdMonthStat_RowDataBound">
+                                        <Columns>
+                                            <asp:BoundField DataField="Month" HeaderText="Month" HeaderStyle-HorizontalAlign="Center" ItemStyle-Font-Bold="true" />
+                                            <asp:BoundField HeaderText="Received" HeaderStyle-HorizontalAlign="Center" />
+                                            <asp:BoundField HeaderText="Completed" HeaderStyle-HorizontalAlign="Center" />
+                                        </Columns>
+                                        <EmptyDataTemplate>
+                                            <label style="color: red;">No Data Found</label>
+                                        </EmptyDataTemplate>
+                                    </asp:GridView>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 borderleft">
+                    <div id="chart_div6" class="chartLast">
+                        <div class="col-md-12">
+                            <h4 style="text-align: center; color: #6794CE; margin-top: 15px;"><b>Vendors Pending Response for Recertification</b></h4>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="col-md-12">
+                                <asp:GridView ID="grdPendingResponse" runat="server" CssClass="grid" HeaderStyle-BackColor="#6794ce" PagerStyle-BackColor="#ECF4FE" PagerStyle-ForeColor="Gray" AlternatingRowStyle-BackColor="White" BorderColor="AntiqueWhite" RowStyle-BackColor="#ECF4FE" HeaderStyle-ForeColor="White" RowStyle-ForeColor="Gray" AllowSorting="true" AllowPaging="true" PageSize="10" AutoGenerateColumns="false" ShowHeader="true" Style="width: 100%; text-align: center; margin-bottom: 10px;" BackColor="White" EmptyDataRowStyle-BorderColor="White" OnPageIndexChanging="grdPendingResponse_PageIndexChanging" OnRowDataBound="grdPendingResponse_RowDataBound">
+                                    <Columns>
+                                        <asp:BoundField DataField="vendorName" HeaderText="Vendor Name" HeaderStyle-HorizontalAlign="Center" ItemStyle-Font-Bold="true" />
+                                        <asp:BoundField DataField="requestedDate" HeaderText="Recert Requested Date" DataFormatString="{0:d}" HeaderStyle-HorizontalAlign="Center" />
+                                        <asp:BoundField DataField="DaysSinceEmailed" HeaderText="Days Since Letter Sent" HeaderStyle-HorizontalAlign="Center" />
+                                    </Columns>
+                                    <EmptyDataTemplate>
+                                        <label style="color: red;">No Data Found</label>
+                                    </EmptyDataTemplate>
+                                </asp:GridView>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ModalViewDetails" role="dialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">
+                        <asp:Label ID="lblModalHeading" runat="server" Text="Modal Heading" Style="text-align: center; color: #6794CE;"></asp:Label></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12" style="margin-top: 20px">
+                            <div class="row" style="margin-top: 10px; display: none;" id="divBlack" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblblack" runat="server" Text="Black"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblBlackCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divHispanic" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblHispanic" runat="server" Text="Hispanic"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblHispanicCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divAsian" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblAsian" runat="server" Text="Asian"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblAsianCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divIndiginessAmerican" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblIndiginessAmerican" runat="server" Text="Indiginess American"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblIndiginessAmericanCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divVeteran" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblVeteranModal" runat="server" Text="Veteran"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblVeteranCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divServiceDisabled" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblServiceDisabled" runat="server" Text="Service Disabled"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblServiceDisabledCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divRehab" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblRehab" runat="server" Text="Rehabilitation Facilities"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblRehabCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divLaborSurplus" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblLaborSurplus" runat="server" Text="Labor Surplus County"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblLaborSurplusCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divMedianIncome" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblMedianIncome" runat="server" Text="70% Median Income County"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblMedianIncomeCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divTargetedNeighbor" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblTargetedNeighbor" runat="server" Text="Targeted Neighborhood"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblTargetedNeighborCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                            <div class="row" style="margin-top: 10px; display: none;" id="divEnterpriseZone" runat="server">
+                                <div class="col-md-3"></div>
+                                <div class="col-md-5">
+                                    <asp:Label ID="lblEnterpriseZone" runat="server" Text="Enterprise Zone"></asp:Label>
+                                </div>
+                                <div class="col-md-1">
+                                    <asp:Label ID="lblEnterpriseZoneCount" runat="server"></asp:Label>
+                                </div>
+                                <div class="col-md-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <%--<script type="text/javascript">
+        google.charts.load("current", { packages: ["corechart"] });
+        google.charts.setOnLoadCallback(drawChart);
+        function drawChart() {
+          var data = google.visualization.arrayToDataTable([
+            ['Classification', 'Count'],
+            ['Goods', parseInt($(<%=hdnGoods.ClientID %>).val())],
+          ['Services', parseInt($(<%=hdnServices.ClientID %>).val())],
+          ['PT', parseInt($(<%=hdnPT.ClientID %>).val())],
+          ['Construction', parseInt($(<%=hdnConstruction.ClientID %>).val())]
+        ]);
+
+        var options = {
+            title: 'Vendor Categories',
+            is3D: true,
+            height:250,
+            width:540
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('piechart_3d'));
+        chart.draw(data, options);
+    }
+    </script>--%>
+    <script type="text/javascript">
+        google.charts.load("current", { packages: ["corechart"] });
+        google.charts.setOnLoadCallback(drawChart);
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+              ['Classification', 'Count'],
+              ['Goods', parseInt($(<%=hdnGoods.ClientID %>).val())],
+          ['Services', parseInt($(<%=hdnServices.ClientID %>).val())],
+          ['PT', parseInt($(<%=hdnPT.ClientID %>).val())],
+          ['Construction', parseInt($(<%=hdnConstruction.ClientID %>).val())]
+            ]);
+
+            var options = {
+                //title: 'Vendor Categories',
+                is3D: true,
+                height: 270,
+                //width: 540
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('chart_div4'));
+
+            //Clickable and Link it
+            //function selectHandler() {
+            //    var selectedItem = chart.getSelection()[0];
+            //    if (selectedItem) {
+            //        var topping = data.getValue(selectedItem.row, 0);
+            //        alert('The user selected ' + topping);
+            //    }
+            //  }
+            // google.visualization.events.addListener(chart, 'select', selectHandler);
+
+            chart.draw(data, options);
+        }
+        $(window).resize(function () {
+            drawChart();
+        });
+    </script>
+    <script type="text/javascript">
+        function showmessage() {
+            $("#<%=myMessage.ClientID%>").show();
+            setTimeout(function () {
+                var selectedEffect = 'blind';
+                var options = {};
+                $("#<%=myMessage.ClientID%>").hide();
+            }, 5000);
+            return false;
+        }
+    </script>
+    <script type="text/javascript">
+        function showModal() {
+            //   jQuery.noConflict();
+            $("#ModalViewDetails").modal('show');
+        }
+    </script>
+</asp:Content>

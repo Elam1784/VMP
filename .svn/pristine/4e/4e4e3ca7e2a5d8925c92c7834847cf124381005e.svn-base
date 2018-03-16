@@ -1,0 +1,312 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Admin/vmpAdmMaster.Master" AutoEventWireup="true" CodeBehind="vmpAdmRegion.aspx.cs" Inherits="VMP_1._0.Admin.vmpAdmRegion" EnableEventValidation="false" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <script>
+        $(document).ready(function () {
+            $("#navbar7 li").removeClass("active");//this will remove the active class from  
+            //previously active menu item 
+            $('#menu').addClass('active');
+        });
+    </script>
+    <script type="text/javascript">
+        function showModal() {
+            $("#myModal").modal('show');
+        }
+    </script>
+    <script type="text/javascript">
+        function fnCheck() {
+            if ((document.getElementById("<%=txtClassificationNew.ClientID%>").value).length == 0) {
+                // alert("The textbox should not be empty");
+                document.getElementById('lblerr').style.display = 'block';
+            }
+            else {
+                document.getElementById('lblerr').style.display = 'none';
+                document.getElementById("<%=btnSaveNewC.ClientID%>").click();
+            }
+            //$("#myModalNew").modal('show');
+        }
+        function fnCheckRegion() {
+            if ((document.getElementById("<%=txtRegionNew.ClientID%>").value).length == 0) {
+                 // alert("The textbox should not be empty");
+                 document.getElementById('lblerrRegion').style.display = 'block';
+             }
+             else {
+                 document.getElementById('lblerrRegion').style.display = 'none';
+                 document.getElementById("<%=btnSaveRNew.ClientID%>").click();
+            }
+             //$("#myModalNew").modal('show');
+        }
+        //function showModalNew() {
+        //    $("#myModalNew").modal('show');
+        //}
+    </script>
+    <script type="text/javascript">
+        function showModalRegion() {
+            $("#myModalRegion").modal('show');
+        }
+    </script>
+    <script type="text/javascript">
+        function runEffect1() {
+            $("#<%=myMessage1.ClientID%>").show();
+            setTimeout(function () {
+                var selectedEffect = 'blind';
+                var options = {};
+                $("#<%=myMessage1.ClientID%>").hide();
+            }, 5000);
+            return false;
+        }
+    </script>
+    <style>
+        .table1 tr, td, th {
+            text-align: left !important;
+        }
+    </style>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+     <div style="display: none; text-align: center" id="myMessage1" runat="server" class="alert alert-success col-sm-12">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <asp:Label ID="lblError" runat="server" Text="Saved Successfully"></asp:Label>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6">
+                <%--style="width:30%; margin:0 auto;"--%>
+                <ul class="nav nav-pills">
+                    <li role="presentation" class="active" runat="server" id="liEDR">
+                        <asp:LinkButton ID="lnkbtnEDR" runat="server" Text="Economically Disabled Region" CssClass="btn-link" OnClick="lnkbtnEDR_Click"></asp:LinkButton></li>
+                    <li role="presentation" runat="server" id="liMC">
+                        <asp:LinkButton ID="lnkbtnMC" runat="server" Text="Manage Classification" CssClass="btn-link" OnClick="lnkbtnMC_Click"></asp:LinkButton></li>
+                    <li role="presentation" runat="server" id="liMR">
+                        <asp:LinkButton ID="lnkbtnMR" runat="server" Text="Manage Region" CssClass="btn-link" OnClick="lnkbtnMR_Click"></asp:LinkButton></li>
+                </ul>
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+    </div>
+    <br />
+    <br />
+    <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
+    <asp:MultiView ID="multiviewRegion" runat="server">
+        <asp:View ID="viewEDR" runat="server">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <div class="input-group" style="margin: 0 auto;">
+                            <h4>Economically Disabled Region</h4>
+                            <%--<input type="text" class="form-control" placeholder="Search Region">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button"><i class="glyphicon glyphicon-search"></i></button>
+                            </span>--%>
+                        </div>
+                        <!-- /input-group -->
+                    </div>
+                    <!-- /.col-lg-6 -->
+                </div>
+
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-md-4"></div>
+                            <div class="col-md-4">
+                            </div>
+                            <div class="col-md-4 scrollbar" style="height: 400px; overflow-y: scroll;">
+                                <asp:UpdatePanel ID="UpdatePanel3" runat="server" UpdateMode="Conditional">
+                            <ContentTemplate>
+                                <asp:GridView ID="grdRegionClass" runat="server" CssClass="table1" AutoGenerateColumns="false" OnRowDataBound="grdRegionClass_RowDataBound" OnSelectedIndexChanged="grdRegionClass_SelectedIndexChanged" DataKeyNames="regionId" HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-ForeColor="White" Style="width: 100%;">
+                                    <Columns>
+                                        <asp:BoundField DataField="region" HeaderText="Region" HeaderStyle-HorizontalAlign="Center" />
+                                        <asp:BoundField DataField="regionId" HeaderText="Region" HeaderStyle-HorizontalAlign="Center" Visible="false" />
+                                    </Columns>
+                                </asp:GridView>
+                                </ContentTemplate>
+                                    </asp:UpdatePanel>
+                                <asp:Label ID="lblErrorED" runat="server" Text="No Regions Found" Visible="false" Style="color: red;"></asp:Label>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="col-md-6">
+                        <asp:UpdatePanel ID="UpdatePanel4" runat="server" UpdateMode="Conditional">
+                            <Triggers>
+                                <asp:PostBackTrigger  ControlID="btnUpdateRC"  />
+                            </Triggers>
+                             <ContentTemplate>
+                        <asp:CheckBoxList ID="chkboxClassification" runat="server" CssClass="table2 checkbox"></asp:CheckBoxList>
+                        <br />
+                        <asp:Button ID="btnUpdateRC" runat="server" Text="Update" CssClass="btn btn-primary" Visible="false" OnClick="btnUpdateRC_Click" />
+                                 </ContentTemplate>
+                            </asp:UpdatePanel>
+                    </div>
+                </div>
+            </div>
+        </asp:View>
+        <asp:View ID="viewC" runat="server" OnLoad="viewC_Load">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <div class="input-group" style="margin: 0 auto;">
+                            <h4>Manage Classification</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <asp:GridView ID="grdClassification" runat="server" CssClass="table1" AutoGenerateColumns="false" OnRowDataBound="grdClassification_RowDataBound" OnSelectedIndexChanged="grdClassification_SelectedIndexChanged" DataKeyNames="ClassificationId" HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-ForeColor="White" Style="width: 100%;">
+                            <Columns>
+                                <asp:BoundField DataField="ClassificationDesc" HeaderText="Classification" HeaderStyle-HorizontalAlign="Center" />
+                                <asp:BoundField DataField="ClassificationId" HeaderText="Classification" HeaderStyle-HorizontalAlign="Center" Visible="false" />
+                            </Columns>
+                        </asp:GridView>
+                        <asp:Label ID="lblErrorC" runat="server" Text="No Classification Found" Visible="false" Style="color: red;"></asp:Label>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4" style="text-align: center;">
+                        <asp:Button ID="btnUpdateC" runat="server" Text="Update" Visible="false" CssClass="btn btn-primary" OnClick="btnUpdateC_Click" Style="margin-left: 3px;" />
+                        <%--<asp:Button ID="btnNewC" runat="server" Text="New" CausesValidation="false" Visible="true" OnClick="btnNewC_Click" Style="margin-left: 3px;" />--%>
+                        <a href="#" onclick="$('#myModalNew').modal({'backdrop': 'static'});" class="btn btn-primary" style="margin-left: 3px;">New</a>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+            </div>
+            <div class="modal fade" id="myModal" role="dialog" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Update Classification</h4>
+                        </div>
+                        <div class="modal-body">
+                            <label>Classification Description</label>
+                            <div class="input-group" style="width: 100%; margin: 0 auto; padding-bottom: 10px; text-align: center; margin-left: -30px;">
+                                <asp:TextBox ID="txtClassification" runat="server" class="form-control" TextMode="MultiLine" Style="width: 90%; border-top-right-radius: 4px; border-bottom-right-radius: 4px; height: 90px;"></asp:TextBox>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <asp:Button ID="btnSaveC" runat="server" Text="Update" CssClass="btn btn-primary" ValidationGroup="cp" OnClick="btnSaveC_Click" />
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="myModalNew" role="dialog" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">New Classification</h4>
+                        </div>
+                        <div class="modal-body">
+                            <label>Classification Description</label>
+                            <div class="input-group" style="width: 100%; margin: 0 auto; padding-bottom: 10px; text-align: center; margin-left: -30px;">
+                                <asp:TextBox ID="txtClassificationNew" runat="server" class="form-control" TextMode="MultiLine" Style="width: 90%; border-top-right-radius: 4px; border-bottom-right-radius: 4px; height: 90px;"></asp:TextBox>
+                                <label id="lblerr" style="color: red; display: none;">Textbox cannot be empty</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="fnCheck()">Save</button>
+                            <asp:Button ID="btnSaveNewC" runat="server" Text="Update" CssClass="btn btn-primary" OnClick="btnSaveNewC_Click" Style="display: none;" />
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </asp:View>
+        <asp:View ID="viewR" runat="server" OnLoad="viewR_Load">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <div class="input-group" style="margin: 0 auto;">
+                            <h4>Manage Region</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4 scrollbar" style="height: 400px; overflow-y: scroll;">
+                        <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
+                            <ContentTemplate>
+                                <asp:GridView ID="grdRegion" runat="server" CssClass="table1" AutoGenerateColumns="false" OnRowDataBound="grdRegion_RowDataBound" OnSelectedIndexChanged="grdRegion_SelectedIndexChanged" DataKeyNames="regionId" HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-ForeColor="White" Style="width: 100%;">
+                                    <Columns>
+                                        <asp:BoundField DataField="region" HeaderText="Region" HeaderStyle-HorizontalAlign="Center" />
+                                        <asp:BoundField DataField="regionId" HeaderText="Region" HeaderStyle-HorizontalAlign="Center" Visible="false" />
+                                    </Columns>
+                                </asp:GridView>
+                            </ContentTemplate>
+                        </asp:UpdatePanel>
+                        <asp:Label ID="lblErrorR" runat="server" Text="No Region Found" Visible="false" Style="color: red;"></asp:Label>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4" style="text-align: center;">
+                        <asp:UpdatePanel ID="UpdatePanel2" runat="server" UpdateMode="Conditional">
+                            <Triggers>
+                                <asp:PostBackTrigger  ControlID="btnUpdateR"  />
+                            </Triggers>
+                             <ContentTemplate>
+                                 <asp:Button ID="btnUpdateR" runat="server" CssClass="btn btn-primary" Text="Update" Visible="false" OnClick="btnUpdateR_Click" Style="margin-left: 3px;" />
+                                 <a href="#" onclick="$('#myModalRegionNew').modal({'backdrop': 'static'});" class="btn btn-primary" style="margin-left: 3px;">New</a>
+                             </ContentTemplate>
+                        </asp:UpdatePanel>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+            </div>
+            <div class="modal fade" id="myModalRegion" role="dialog" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Update Region</h4>
+                        </div>
+                        <div class="modal-body">
+                            <label>Region</label>
+                            <div class="input-group" style="width: 100%; margin: 0 auto; padding-bottom: 10px; text-align: center; margin-left: -30px;">
+                                <asp:TextBox ID="txtRegion" runat="server" class="form-control" TextMode="MultiLine" Style="width: 90%; border-top-right-radius: 4px; border-bottom-right-radius: 4px; height: 90px;"></asp:TextBox>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <asp:Button ID="btnSaveR" runat="server" Text="Update" CssClass="btn btn-primary" ValidationGroup="cp" OnClick="btnSaveR_Click" />
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="myModalRegionNew" role="dialog" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">New Region</h4>
+                        </div>
+                        <div class="modal-body">
+                            <label>Region</label>
+                            <div class="input-group" style="width: 100%; margin: 0 auto; padding-bottom: 10px; text-align: center; margin-left: -30px;">
+                                <asp:TextBox ID="txtRegionNew" runat="server" class="form-control" TextMode="MultiLine" Style="width: 90%; border-top-right-radius: 4px; border-bottom-right-radius: 4px; height: 90px;"></asp:TextBox>
+                                <label id="lblerrRegion" style="color: red; display: none;">Textbox cannot be empty</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" onclick="fnCheckRegion()">Save</button>
+                            <asp:Button ID="btnSaveRNew" runat="server" Text="Update" CssClass="btn btn-primary" OnClick="btnSaveRNew_Click" Style="display: none;" />
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </asp:View>
+    </asp:MultiView>
+</asp:Content>

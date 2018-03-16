@@ -1,0 +1,629 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.Configuration;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrHome : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+        }
+
+        protected void Page_PreRender(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                string qur = dbLibrary.idBuildQuery("proc_getStatsData", Session["UserId"].ToString(), bool.Parse(Session["isAdmin"].ToString()) ? "1" : "0");
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                ViewState["homeStats"] = ds;
+                grdProgress.DataSource = ds.Tables[0];
+                grdProgress.DataBind();
+
+                grdReCert.DataSource = ds.Tables[1];
+                grdReCert.DataBind();
+                if (ds.Tables[2].Rows.Count > 0)
+                {
+                    int black = 0;
+                    int hispanic = 0;
+                    int asian = 0;
+                    int indiginessAmerican = 0;
+                    int women = 0;
+                    int physicallyDisabled = 0;
+                    int veteran = 0;
+                    int serviceDisabled = 0;
+                    int rehab = 0;
+                    int LaborSurplus = 0;
+                    int medianIncome = 0;
+                    int targetedNeighbor = 0;
+                    int enterpriseZone = 0;
+                    int minority = 0;
+                    int EDR = 0;
+                    int totalVeteran = 0;
+                    int Total = 0;
+                    foreach (DataRow dr in ds.Tables[2].Rows)
+                    {
+                        if (dr["Category"].ToString().Trim().Length > 0)
+                        {
+                            string firstLetter = dr["Category"].ToString();
+                            switch (firstLetter)
+                            {
+                                case "B":
+                                    black = int.Parse(dr["Count"].ToString());
+                                    minority = int.Parse(dr["Count"].ToString()) + minority;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "H":
+                                    hispanic = int.Parse(dr["Count"].ToString());
+                                    minority = int.Parse(dr["Count"].ToString()) + minority;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "A":
+                                    asian = int.Parse(dr["Count"].ToString());
+                                    minority = int.Parse(dr["Count"].ToString()) + minority;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "I":
+                                    indiginessAmerican = int.Parse(dr["Count"].ToString());
+                                    minority = int.Parse(dr["Count"].ToString()) + minority;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "W":
+                                    women = int.Parse(dr["Count"].ToString());
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "D":
+                                    physicallyDisabled = int.Parse(dr["Count"].ToString());
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "V":
+                                    veteran = int.Parse(dr["Count"].ToString());
+                                    totalVeteran = int.Parse(dr["Count"].ToString()) + totalVeteran;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "S":
+                                    serviceDisabled = int.Parse(dr["Count"].ToString());
+                                    totalVeteran = int.Parse(dr["Count"].ToString()) + totalVeteran;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "R":
+                                    rehab = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "L":
+                                    LaborSurplus = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "M":
+                                    medianIncome = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "T":
+                                    targetedNeighbor = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "E":
+                                    enterpriseZone = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                            }
+                        }
+                    }
+                    lblMinority.Text = minority.ToString();
+                    lblWomen.Text = women.ToString();
+                    lblDisabled.Text = physicallyDisabled.ToString();
+                    lblEDR.Text = EDR.ToString();
+                    lblVeteran.Text = totalVeteran.ToString();
+                    lblTotal.Text = Total.ToString();
+                    lblBlackCount.Text = black.ToString();
+                    lblAsianCount.Text = asian.ToString();
+                    lblIndiginessAmericanCount.Text = indiginessAmerican.ToString();
+                    lblHispanicCount.Text = hispanic.ToString();
+                    lblVeteranCount.Text = veteran.ToString();
+                    lblServiceDisabledCount.Text = serviceDisabled.ToString();
+                    lblRehabCount.Text = rehab.ToString();
+                    lblLaborSurplusCount.Text = LaborSurplus.ToString();
+                    lblMedianIncomeCount.Text = medianIncome.ToString();
+                    lblTargetedNeighborCount.Text = targetedNeighbor.ToString();
+                    lblEnterpriseZoneCount.Text = enterpriseZone.ToString();
+                }
+                if (ds.Tables[3].Rows.Count > 0)
+                {
+                    foreach (DataRow dr in ds.Tables[3].Rows)
+                    {
+                        if (dr["supplierClassification"].ToString() == "Construction")
+                        {
+                            hdnConstruction.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Goods")
+                        {
+                            hdnGoods.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Professional/Technical")
+                        {
+                            hdnPT.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Services")
+                        {
+                            hdnServices.Value = dr["count"].ToString();
+                        }
+                    }
+                }
+                if (ds.Tables[4].Rows.Count > 0)
+                {
+                    lblAvgAll.Text = string.IsNullOrEmpty(ds.Tables[4].Rows[0]["AvgDays"].ToString()) ? "--" : ds.Tables[4].Rows[0]["AvgDays"].ToString();
+                }
+                if (ds.Tables[5].Rows.Count > 0 && !bool.Parse(Session["isAdmin"].ToString()))
+                {
+                    lblAvgSpecialist.Text = string.IsNullOrEmpty(ds.Tables[5].Rows[0]["AvgDays"].ToString()) ? "--" : ds.Tables[5].Rows[0]["AvgDays"].ToString();
+                }
+                else
+                {
+                    divAvgYours.Attributes.Add("style", "display: none;");
+                }
+                //  if (ds.Tables[6].Rows.Count > 0)
+                //  {
+                DataTable Months = new DataTable();
+                Months.Columns.Add("Month", typeof(string));
+                DataRow row1 = Months.NewRow();
+                row1.SetField<string>("Month", DateTime.Now.ToString("MMMM"));
+                Months.Rows.Add(row1);
+                DataRow row2 = Months.NewRow();
+                row2.SetField<string>("Month", (DateTime.Now.AddMonths(-1)).ToString("MMMM"));
+                Months.Rows.Add(row2);
+                DataRow row3 = Months.NewRow();
+                row3.SetField<string>("Month", (DateTime.Now.AddMonths(-2)).ToString("MMMM"));
+                Months.Rows.Add(row3);
+                grdMonthStat.DataSource = Months;
+                grdMonthStat.DataBind();
+                //   }
+                grdPendingResponse.DataSource = ds.Tables[8];
+                grdPendingResponse.DataBind();
+
+                //Portal Applications
+                if(ds.Tables[10].Rows.Count>0)
+                {
+                    accordion.Attributes.Add("style", "display:block");
+                    lblPortalAppCount.Text = ds.Tables[10].Rows.Count.ToString();
+
+                    //Bind Data To Gridview
+                    grdPortalApps.DataSource = ds.Tables[10];
+                    grdPortalApps.DataBind();
+                    ViewState["SpecialistsPortalApps"] = ds.Tables[10];
+                }
+                else
+                {
+                    accordion.Attributes.Add("style", "display:none");
+                }
+            }
+        }
+
+        protected void grdProgress_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdProgress.PageIndex = e.NewPageIndex;
+            grdProgress.DataSource = ((DataSet)ViewState["homeStats"]).Tables[0];
+            grdProgress.DataBind();
+        }
+
+        protected void grdReCert_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdReCert.PageIndex = e.NewPageIndex;
+            grdReCert.DataSource = ((DataSet)ViewState["homeStats"]).Tables[1];
+            grdReCert.DataBind();
+        }
+
+        protected void grdPendingResponse_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdPendingResponse.PageIndex = e.NewPageIndex;
+            grdPendingResponse.DataSource = ((DataSet)ViewState["homeStats"]).Tables[8];
+            grdPendingResponse.DataBind();
+        }
+
+        protected void grdPendingResponse_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                if (Decimal.Parse(DataBinder.Eval(e.Row.DataItem, "DaysSinceEmailed").ToString()) > 14)
+                {
+                    e.Row.Cells[2].ForeColor = System.Drawing.Color.Red;
+                }
+            }
+
+        }
+
+        protected void grdProgress_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                if (Decimal.Parse(DataBinder.Eval(e.Row.DataItem, "DaysSinceArrived").ToString()) > 60)
+                {
+                    e.Row.Cells[2].ForeColor = System.Drawing.Color.Red;
+                }
+            }
+
+        }
+
+        protected void lnkbtnVeteranDetails_Click(object sender, EventArgs e)
+        {
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+            divVeteran.Attributes.Add("style", "margin-top:10px;display: block;");
+            divServiceDisabled.Attributes.Add("style", "margin-top:10px;display: block;");
+            divRehab.Attributes.Add("style", "margin-top:10px;display: none;");
+            divLaborSurplus.Attributes.Add("style", "margin-top:10px;display: none;");
+            divMedianIncome.Attributes.Add("style", "margin-top:10px;display: none;");
+            divTargetedNeighbor.Attributes.Add("style", "margin-top:10px;display: none;");
+            divEnterpriseZone.Attributes.Add("style", "margin-top:10px;display: none;");
+            divBlack.Attributes.Add("style", "margin-top:10px;display: none;");
+            divAsian.Attributes.Add("style", "margin-top:10px;display: none;");
+            divHispanic.Attributes.Add("style", "margin-top:10px;display: none;");
+            divIndiginessAmerican.Attributes.Add("style", "margin-top:10px;display: none;");
+            lblModalHeading.Text = "Vendors By Designation - Veteran";
+        }
+
+        protected void lnkEDRDetails_Click(object sender, EventArgs e)
+        {
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+            divRehab.Attributes.Add("style", "margin-top:10px;display: block;");
+            divLaborSurplus.Attributes.Add("style", "margin-top:10px;display: block;");
+            divMedianIncome.Attributes.Add("style", "margin-top:10px;display: block;");
+            divTargetedNeighbor.Attributes.Add("style", "margin-top:10px;display: block;");
+            divEnterpriseZone.Attributes.Add("style", "margin-top:10px;display: block;");
+            divBlack.Attributes.Add("style", "margin-top:10px;display: none;");
+            divAsian.Attributes.Add("style", "margin-top:10px;display: none;");
+            divHispanic.Attributes.Add("style", "margin-top:10px;display: none;");
+            divIndiginessAmerican.Attributes.Add("style", "margin-top:10px;display: none;");
+            divVeteran.Attributes.Add("style", "margin-top:10px;display: none;");
+            divServiceDisabled.Attributes.Add("style", "margin-top:10px;display: none;");
+            lblModalHeading.Text = "Vendors By Designation - Economically Disadvantaged";
+        }
+
+        protected void lnkMinorityDetails_Click(object sender, EventArgs e)
+        {
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+            divBlack.Attributes.Add("style", "margin-top:10px;display: block;");
+            divAsian.Attributes.Add("style", "margin-top:10px;display: block;");
+            divHispanic.Attributes.Add("style", "margin-top:10px;display: block;");
+            divIndiginessAmerican.Attributes.Add("style", "margin-top:10px;display: block;");
+            divVeteran.Attributes.Add("style", "margin-top:10px;display: none;");
+            divServiceDisabled.Attributes.Add("style", "margin-top:10px;display: none;");
+            divRehab.Attributes.Add("style", "margin-top:10px;display: none;");
+            divLaborSurplus.Attributes.Add("style", "margin-top:10px;display: none;");
+            divMedianIncome.Attributes.Add("style", "margin-top:10px;display: none;");
+            divTargetedNeighbor.Attributes.Add("style", "margin-top:10px;display: none;");
+            divEnterpriseZone.Attributes.Add("style", "margin-top:10px;display: none;");
+            lblModalHeading.Text = "Vendors By Designation - Minority";
+        }
+
+        protected void grdReCert_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                if (Decimal.Parse(DataBinder.Eval(e.Row.DataItem, "DaysForRecert").ToString()) < 1)
+                {
+                    e.Row.Cells[2].ForeColor = System.Drawing.Color.Red;
+                }
+            }
+
+        }
+
+        protected void grdMonthStat_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            DataSet ds = (DataSet)ViewState["homeStats"];
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                Boolean isCompletedCount = false;
+                bool isAddedCount = false;
+                foreach (DataRow dr in ds.Tables[6].Rows)
+                {
+                    if (e.Row.Cells[0].Text == dr["Month"].ToString())
+                    {
+                        e.Row.Cells[1].Text = dr["TotalCount"].ToString();
+                        isAddedCount = true;
+                    }
+                }
+                if (!isAddedCount)
+                {
+                    e.Row.Cells[1].Text = "0";
+                }
+                foreach (DataRow dr in ds.Tables[7].Rows)
+                {
+                    if (e.Row.Cells[0].Text == dr["Month"].ToString())
+                    {
+                        e.Row.Cells[2].Text = dr["CompletedCount"].ToString();
+                        isCompletedCount = true;
+                    }
+                }
+                if (!isCompletedCount)
+                {
+                    e.Row.Cells[2].Text = "0";
+                }
+            }
+        }
+
+        protected void lnkStatus_Click(object sender, EventArgs e)
+        {
+            LinkButton lnkStatus = (LinkButton)sender;
+            loadEDR();
+            getDataforStatus(lnkStatus.CommandArgument);
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModalforStatus();", true);
+        }
+        private void loadEDR()
+        {
+            string qur = "EXEC [proc_getEDR]";
+            DataSet dsEDR = dbLibrary.idGetCustomResult(qur);
+            if (dsEDR != null)
+            {
+                chkEDR.DataValueField = "ClassificationId";
+                chkEDR.DataTextField = "ClassificationDesc";
+                chkEDR.DataSource = dsEDR;
+                chkEDR.DataBind();
+            }
+        }
+
+        private void getDataforStatus(string vendorId)
+        {
+            ClearAll();
+            string qur = dbLibrary.idBuildQuery("[proc_getDashboardStatus]", vendorId);
+            DataSet dsStatus = dbLibrary.idGetCustomResult(qur);
+            if (dsStatus != null)
+            {
+                if (dsStatus.Tables[0].Rows.Count > 0)
+                {
+                    if ((bool)dsStatus.Tables[0].Rows[0]["citizen"] == true)
+                    {
+                        chkCitizen.Checked = true;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["asian"] == true)
+                    {
+                        chkbxTargetGroup.Items[0].Selected = true;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["black"] == true)
+                    {
+                        chkbxTargetGroup.Items[1].Selected = true;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["hispanic"] == true)
+                    {
+                        chkbxTargetGroup.Items[2].Selected = true;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["indiginessAmerican"] == true)
+                    {
+                        chkbxTargetGroup.Items[3].Selected = true;
+                        divIndiginess.Attributes.Add("style", "display:block");
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["alaskan"] == true)
+                    {
+                        chkIndiginess.Items[0].Selected = true;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["hawaiinNative"] == true)
+                    {
+                        chkIndiginess.Items[1].Selected = true;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["americanIndian"] == true)
+                    {
+                        chkIndiginess.Items[2].Selected = true;
+                        divTribal.Attributes.Add("style", "display:block");
+                        lblTribalID.Text = dsStatus.Tables[0].Rows[0]["tribalID"].ToString();
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["physicallyDisabled"] == true)
+                    {
+                        chkTG1.Items[0].Selected = true;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["woman"] == true)
+                    {
+                        chkTG1.Items[1].Selected = true;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["veteran"] == true)
+                    {
+                        radVeteran.Items[0].Selected = true;
+                    }
+                    else
+                    {
+                        radVeteran.Items[0].Selected = false;
+                    }
+                    if ((bool)dsStatus.Tables[0].Rows[0]["serviceDisabled"] == true)
+                    {
+                        radVeteran.Items[1].Selected = true;
+                    }
+                    else
+                    {
+                        radVeteran.Items[1].Selected = false;
+                    }
+                    //  DisableAll();
+                }
+                else
+                {
+                    chkCitizen.Checked = false;
+                    chkbxTargetGroup.SelectedIndex = -1;
+                    chkIndiginess.SelectedIndex = -1;
+                    chkTG1.SelectedIndex = -1;
+                    radVeteran.SelectedIndex = -1;
+                    lblTribalID.Text = "";
+                    DisableAll();
+                    divIndiginess.Attributes.Add("style", "display:none");
+                    divTribal.Attributes.Add("style", "display:none");
+                }
+                if (dsStatus.Tables[9].Rows.Count > 0)
+                {
+                    if ((bool)dsStatus.Tables[9].Rows[0]["rehabFacilities"] == true)
+                    {
+                        chkRehabilitation.Checked = true;
+                    }
+                    else
+                    {
+                        chkRehabilitation.Checked = false;
+                    }
+                }
+                else
+                {
+                    chkRehabilitation.Checked = false;
+                }
+                DisableAll();
+                if (dsStatus.Tables[1].Rows.Count > 0)
+                {
+                    foreach (DataRow r in dsStatus.Tables[1].Rows)
+                    {
+                        foreach (ListItem li in chkEDR.Items)
+                        {
+                            if (li.Value == r["classificationId"].ToString())
+                            {
+                                li.Selected = true;
+                            }
+                        }
+                    }
+                }
+                if (dsStatus.Tables[2].Rows.Count > 0)
+                {
+                    lblDesignation.Text = dsStatus.Tables[2].Rows[0]["finalClassification"].ToString();
+                }
+                else
+                {
+                    lblDesignation.Text = string.Empty;
+                }
+                if (dsStatus.Tables[4].Rows.Count > 0)
+                {
+                    //lblOrig.Text = dsStatus.Tables[4].Rows[0]["FirstCertifiedDate"].ToString();
+                    txtOrig.Text = DateTime.Parse(dsStatus.Tables[4].Rows[0]["FirstCertifiedDate"].ToString()).ToShortDateString();
+                }
+                if (dsStatus.Tables[3].Rows.Count > 0)
+                {
+                    //lblLast.Text = dsStatus.Tables[3].Rows[0]["LastCertifiedDate"].ToString();
+                    txtLast.Text = DateTime.Parse(dsStatus.Tables[3].Rows[0]["LastCertifiedDate"].ToString()).ToShortDateString();
+                }
+                if (dsStatus.Tables[8].Rows.Count > 0)
+                {
+                    if (!string.IsNullOrEmpty(dsStatus.Tables[8].Rows[0]["NextCertificationDate"].ToString()))
+                    {
+                        //lblNext.Text = DateTime.Parse(lblLast.Text).AddYears(1).ToShortDateString();
+                        txtNext.Text = DateTime.Parse(dsStatus.Tables[8].Rows[0]["NextCertificationDate"].ToString()).ToShortDateString();
+                    }
+                }
+                if (!(bool.Parse(this.Session["isAdmin"].ToString())))
+                {
+                    txtOrig.Enabled = false;
+                    txtNext.Enabled = false;
+                    txtLast.Enabled = false;
+                }
+                if (dsStatus.Tables[5].Rows.Count > 0)
+                {
+                    string status;
+                    if (dsStatus.Tables[5].Rows[0]["status"].ToString().Trim() != string.Empty)
+                    {
+                        radbutStatus.SelectedValue = dsStatus.Tables[5].Rows[0]["status"].ToString();
+                        status = dsStatus.Tables[5].Rows[0]["status"].ToString();
+                    }
+                    else
+                    {
+                        radbutStatus.SelectedValue = "Pending";
+                        status = "Pending";
+
+                    }
+                }
+                txtInfoPending.Text = "";
+                if (dsStatus.Tables[7].Rows.Count > 0)
+                {
+                    txtInfoPending.Text = "-> " + dsStatus.Tables[5].Rows[0]["status"].ToString().ToUpper() + " : Overrided On " + DateTime.Parse(dsStatus.Tables[7].Rows[0]["certDate"].ToString()).ToShortDateString() + ";" + Environment.NewLine + "Reason : " + dsStatus.Tables[7].Rows[0]["overrideDesc"].ToString() + Environment.NewLine;
+                }
+                if (dsStatus.Tables[5].Rows[0]["status"].ToString() == "Approved")
+                {
+                    divNext.Attributes.Add("style", "display:block");
+                    divRemoved.Attributes.Add("style", "display:none");
+                    txtInfoPending.Text += "-> APPROVED On : " + dsStatus.Tables[6].Rows[0]["certDate"].ToString() + Environment.NewLine;
+                }
+                else if (dsStatus.Tables[5].Rows[0]["status"].ToString() == "Removed")
+                {
+                    divNext.Attributes.Add("style", "display:none");
+                    lblRemoved.Text = dsStatus.Tables[6].Rows[0]["certDate"].ToString();
+                    divRemoved.Attributes.Add("style", "display:block");
+                }
+                else
+                {
+                    //  txtInfoPending.Text = "";
+                    divNext.Attributes.Add("style", "display:none");
+                    if (dsStatus.Tables[6].Rows.Count > 0)
+                    {
+                        foreach (DataRow dr in dsStatus.Tables[6].Rows)
+                        {
+                            txtInfoPending.Text += "-> " + dr["status"].ToString().ToUpper() + " : " + dr["description"].ToString() + Environment.NewLine;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void DisableAll()
+        {
+            foreach (ListItem li in chkEDR.Items)
+            {
+                li.Enabled = false;
+            }
+            chkCitizen.Enabled = false;
+            chkbxTargetGroup.Items[0].Enabled = false;
+            chkbxTargetGroup.Items[1].Enabled = false;
+            chkbxTargetGroup.Items[2].Enabled = false;
+            chkbxTargetGroup.Items[3].Enabled = false;
+            chkIndiginess.Items[0].Enabled = false;
+            chkIndiginess.Items[1].Enabled = false;
+            chkIndiginess.Items[2].Enabled = false;
+            chkTG1.Items[0].Enabled = false;
+            chkTG1.Items[1].Enabled = false;
+            radVeteran.Items[0].Enabled = false;
+            radVeteran.Items[0].Enabled = false;
+            radVeteran.Items[1].Enabled = false;
+            radVeteran.Items[1].Enabled = false;
+            radbutStatus.SelectedIndex = -1;
+            radbutStatus.Enabled = false;
+            chkRehabilitation.Enabled = false;
+
+        }
+        private void ClearAll()
+        {
+            chkCitizen.Enabled = true;
+            chkCitizen.Checked = false;
+            chkbxTargetGroup.Items[0].Enabled = true;
+            chkbxTargetGroup.Items[1].Enabled = true;
+            chkbxTargetGroup.Items[2].Enabled = true;
+            chkbxTargetGroup.Items[3].Enabled = true;
+            chkbxTargetGroup.SelectedIndex = -1;
+            chkIndiginess.Items[0].Enabled = true;
+            chkIndiginess.Items[1].Enabled = true;
+            chkIndiginess.Items[2].Enabled = true;
+            chkIndiginess.SelectedIndex = -1;
+            chkTG1.Items[0].Enabled = true;
+            chkTG1.Items[1].Enabled = true;
+            chkTG1.SelectedIndex = -1;
+            radVeteran.Items[0].Enabled = true;
+            radVeteran.Items[0].Enabled = true;
+            radVeteran.Items[1].Enabled = true;
+            radVeteran.Items[1].Enabled = true;
+            radVeteran.SelectedIndex = -1;
+            radbutStatus.Enabled = true;
+            radbutStatus.ClearSelection();
+            chkRehabilitation.Enabled = true;
+            chkRehabilitation.Checked = false;
+        }
+
+        protected void grdPortalApps_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdPortalApps.PageIndex = e.NewPageIndex;
+            grdPortalApps.DataSource = ((DataSet)ViewState["SpecialistsPortalApps"]);
+            grdPortalApps.DataBind();
+        }
+    }
+}
+

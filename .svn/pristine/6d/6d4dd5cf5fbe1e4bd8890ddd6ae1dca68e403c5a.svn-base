@@ -1,0 +1,41 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrStatus : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if(!IsPostBack)
+            {
+
+            }
+        }
+
+        protected void btnRecommend_Click(object sender, EventArgs e)
+        {
+            txtOverrideReason.Text = "";
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+        }
+
+        protected void btnLoad_Click(object sender, EventArgs e)
+        {
+            if(ddlLetters.SelectedIndex!=0)
+            {
+                divError.Attributes.Add("style", "display:none");
+                divEditor.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Select Any Letter to Load";
+                return;
+            }
+        }
+    }
+}

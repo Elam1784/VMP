@@ -1,0 +1,185 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Admin/vmpAdmMaster.Master" AutoEventWireup="true" CodeBehind="vmpAdmRules.aspx.cs" Inherits="VMP_1._0.Admin.vmpAdmRules" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <script>
+        $(document).ready(function () {
+            $("#navbar7 li").removeClass("active");//this will remove the active class from  
+            //previously active menu item 
+            $('#menu').addClass('active');
+        });
+    </script>
+    <style>
+        label {
+            font-weight: normal;
+            margin-top: 6px;
+        }
+    </style>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <ul class="nav nav-tabs">
+                    <li role="presentation" class="active"><a href="#">Add Rules</a></li>
+                    <li role="presentation"><a href="#">Combined Rules</a></li>
+                    <li role="presentation"><a href="#">View Rules</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    </div>
+    <asp:MultiView ID="MultiViewRules" runat="server">
+        <asp:View ID="ViewAddRules" runat="server">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4" style="text-align: center">
+                        <h4>Add New Rule</h4>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-md-12">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-2">
+                            <label><b>Rule Name</b></label>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:TextBox ID="txtRuleName" runat="server" CssClass="form-control" Placeholder="Enter Rule Name"></asp:TextBox>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-md-12">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-2">
+                            <label><b>Select Table</b></label>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:DropDownList ID="ddlTable" runat="server" CssClass="form-control"></asp:DropDownList>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-md-12">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-2">
+                            <label><b>Select Column</b></label>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:DropDownList ID="ddlColumn" runat="server" CssClass="form-control"></asp:DropDownList>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-md-12">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-2">
+                            <label><b>Select Condition</b></label>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:DropDownList ID="ddlCondition" runat="server" CssClass="form-control">
+                                <asp:ListItem Value="=">Equal</asp:ListItem>
+                                <asp:ListItem Value="<">Less Than</asp:ListItem>
+                                <asp:ListItem Value=">">Greater Than</asp:ListItem>
+                                <asp:ListItem Value="<=">Less Than or Equal To</asp:ListItem>
+                                <asp:ListItem Value=">=">Greater Than or Equal To</asp:ListItem>
+                                <asp:ListItem Value="<>">Not Equal To</asp:ListItem>
+                            </asp:DropDownList>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-md-12">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-2">
+                            <label><b>Value</b></label>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:TextBox ID="txtValue" runat="server" CssClass="form-control" Placeholder="Enter Value"></asp:TextBox>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px; display: none;" id="divBit" runat="server">
+                    <div class="col-md-12">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-2">
+                            <label><b>Value</b></label>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:DropDownList ID="ddlConditionValue" runat="server" CssClass="form-control">
+                                <asp:ListItem>True</asp:ListItem>
+                                <asp:ListItem>False</asp:ListItem>
+                            </asp:DropDownList>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-md-12">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-2">
+                            <label><b>Select Status</b></label>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:DropDownList ID="ddlStatus" runat="server" CssClass="form-control">
+                                <asp:ListItem Value="-1">--Select Status--</asp:ListItem>
+                                <asp:ListItem>Pending</asp:ListItem>
+                                <asp:ListItem>Denied</asp:ListItem>
+                            </asp:DropDownList>
+                        </div>
+                        <div class="col-md-4" style="text-align:right;">
+                            <label style="border: solid 1px; color: coral">Note*: Applicable only for Individual Rule</label>
+                        </div>
+                    </div>
+                </div>
+                <div  id="divIndRules" runat="server">
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-12">
+                            <div class="col-md-3"></div>
+                            <div class="col-md-2">
+                                <label><b>Type</b></label>
+                            </div>
+                            <div class="col-md-2">
+                                <asp:CheckBox ID="chkTarget" runat="server" Text="Target Group" />
+                            </div>
+                            <div class="col-md-2">
+                                <asp:CheckBox ID="chkVeteran" runat="server" Text="Veteran" />
+                            </div>
+                            <div class="col-md-3">
+                                <asp:CheckBox ID="chkEDR" runat="server" Text="Economically Disadvantaged Region" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-12">
+                            <div class="col-md-3"></div>
+                            <div class="col-md-2">
+                                <label><b>Description</b></label>
+                            </div>
+                            <div class="col-md-3">
+                                <asp:TextBox ID="txtDescription" runat="server" CssClass="form-control" TextMode="MultiLine"></asp:TextBox>
+                            </div>
+                            <div class="col-md-4"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 15px">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4" style="text-align: center;">
+                        <asp:Button ID="btnSave" runat="server" CssClass="btn btn-primary" Text="Save" />
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+            </div>
+        </asp:View>
+        <asp:View ID="ViewCombinedRules" runat="server"></asp:View>
+        <asp:View ID="ViewRules" runat="server"></asp:View>
+    </asp:MultiView>
+</asp:Content>

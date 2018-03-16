@@ -1,0 +1,179 @@
+﻿using Microsoft.Office.Interop.Word;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+using VMP_1._0.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrStatus : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                string appTypes = ruleLibrary.executeRule(Request.QueryString["VId"], Session["UserId"].ToString());
+                lblStatus.Text = getStatus(Request.QueryString["VId"]);
+                if (lblStatus.Text == "Approved")
+                {
+                    lblStatus.Attributes.Add("style", "color:green");
+                   // radbtnApprove.Checked = true;
+                }
+                else
+                {
+                    if (appTypes != string.Empty)
+                    {
+                        if (appTypes.Contains(","))
+                        {
+                            lblAppType.Text = "Vendor might be eligible under other application type(s) - " + appTypes.Substring(appTypes.IndexOf(',') + 1);
+                            divOtherAppType.Attributes.Add("style", "display:block;text-align:center");
+                        }
+                    }
+                    else
+                    {
+                        lblStatus.Text = "Denied";
+                        lblAppType.Text = "Vendor is not applicable for any of the application types";
+                        divOtherAppType.Attributes.Add("style", "display:block;text-align:center");
+                       // radbtnDeny.Checked = true;
+                    }
+                    lblStatus.Attributes.Add("style", "color:red");
+                }
+                if (lblStatus.Text == "Approved")
+                {
+                    radbtnApprove.Checked = true;
+                }
+                else if (lblStatus.Text == "Denied")
+                {
+                    radbtnDeny.Checked = true;
+                }
+                else if (lblStatus.Text == "Pending")
+                {
+                    radbtnPending.Checked = true;
+                }
+                else if (lblStatus.Text == "Removed")
+                {
+                    radbtnRemove.Checked = true;
+                }
+            }
+        }
+        private string getStatus(string vendorID)
+        {
+            string qur = "select TOP 1 status from VendorCertStatus where vendorId='" + vendorID + "' ORDER BY certLogID DESC ";
+            vendorID = dbLibrary.idGetAFieldByQuery(qur);
+            return vendorID;
+        }
+        protected void btnRecommend_Click(object sender, EventArgs e)
+        {
+            txtOverrideReason.Text = "";
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+        }
+
+        protected void btnLoad_Click(object sender, EventArgs e)
+        {
+            if (ddlLetters.SelectedIndex != 0)
+            {
+                divError.Attributes.Add("style", "display:none");
+                divEditor.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Select Any Letter to Load";
+                return;
+            }
+            string path = "C:\\File\\ADDL INFO.docx";
+            string target = "C:\\File\\Output\\sample.html";
+            object sourcepath = path;
+            object TargetPath = target;
+            Application newApp = new Application();
+            Documents d = newApp.Documents;
+            object Unknown = Type.Missing;
+            Document od = d.Open(ref sourcepath, ref Unknown,
+                                     ref Unknown, ref Unknown, ref Unknown,
+                                     ref Unknown, ref Unknown, ref Unknown,
+                                     ref Unknown, ref Unknown, ref Unknown,
+                                     ref Unknown, ref Unknown, ref Unknown, ref Unknown);
+            object format = WdSaveFormat.wdFormatHTML;
+
+            newApp.ActiveDocument.SaveAs(ref TargetPath, ref format,
+                        ref Unknown, ref Unknown, ref Unknown,
+                        ref Unknown, ref Unknown, ref Unknown,
+                        ref Unknown, ref Unknown, ref Unknown,
+                        ref Unknown, ref Unknown, ref Unknown,
+                        ref Unknown, ref Unknown);
+
+            od.Close(WdSaveOptions.wdDoNotSaveChanges);
+            using (System.IO.StreamReader sr = new System.IO.StreamReader("C:\\File\\Output\\sample.html"))
+            {
+                txtEditor.Text = sr.ReadToEnd();
+            }
+            Directory.Delete("C:\\File\\Output\\sample_files", true);
+            File.Delete("C:\\File\\Output\\sample.html");
+
+            txtEditor.Text = txtEditor.Text.Replace("[Date]", DateTime.Now.Date.ToShortDateString());
+            string qur = dbLibrary.idBuildQuery("[proc_getDataForLetter]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString());
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                if (ds.Tables[0].Rows[0]["title"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[Mr/Ms]", ds.Tables[0].Rows[0]["title"].ToString());
+                }
+                if (ds.Tables[0].Rows[0]["ownerFirstName"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[Owner First Name]", ds.Tables[0].Rows[0]["ownerFirstName"].ToString());
+                }
+                if (ds.Tables[0].Rows[0]["ownerLastName"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[Owner Last Name]", ds.Tables[0].Rows[0]["ownerLastName"].ToString());
+                }
+                if (ds.Tables[0].Rows[0]["vendorName"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[Company Name]", ds.Tables[0].Rows[0]["vendorName"].ToString());
+                }
+                if (ds.Tables[0].Rows[0]["address"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[Address]", ds.Tables[0].Rows[0]["address"].ToString());
+                }
+                if (ds.Tables[0].Rows[0]["city"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[City]", ds.Tables[0].Rows[0]["city"].ToString());
+                }
+                if (ds.Tables[0].Rows[0]["state"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[State]", ds.Tables[0].Rows[0]["state"].ToString());
+                }
+                if (ds.Tables[0].Rows[0]["zipCode"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[Zip Code]", ds.Tables[0].Rows[0]["zipCode"].ToString());
+                }
+            }
+            if (ds.Tables[1].Rows.Count > 0)
+            {
+                if (ds.Tables[1].Rows[0]["SpecialistName"].ToString() != "")
+                {
+                    txtEditor.Text = txtEditor.Text.Replace("[Vendor Specialist Name]", ds.Tables[1].Rows[0]["SpecialistName"].ToString());
+                }
+            }
+        }
+
+        protected void lnkRules_Click(object sender, EventArgs e)
+        {
+            string qur = "select description, status from   VendorRulesResult where vendorId=" + Request.QueryString["VId"];
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            grdRulesView.DataSource = ds;
+            grdRulesView.DataBind();
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModalRulesView();", true);
+        }
+    }
+}

@@ -1,0 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrHome : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                if (Request.UrlReferrer != null)
+                {
+                    string previousPageName = System.IO.Path.GetFileName(Request.UrlReferrer.AbsolutePath);
+                    if (previousPageName == "vmpUsrVendor4")
+                    {
+                        Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction", "showmessage()", true);
+                    }
+                }
+                // Get value from the database for statistics
+                DataSet ds = dbLibrary.idGetCustomResult("proc_getStatsData");
+
+                if (ds.Tables[0].Rows.Count > 0)
+                {
+                    foreach (DataRow dr in ds.Tables[0].Rows)
+                    {
+                        if (dr["supplierClassification"].ToString() == "Construction")
+                        {
+                            hdnConstruction.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Goods")
+                        {
+                            hdnGoods.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Professional/Technical")
+                        {
+                            hdnPT.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Services")
+                        {
+                            hdnServices.Value = dr["count"].ToString();
+                        }
+                    }
+                }
+                if (ds.Tables[1].Rows.Count > 0)
+                {
+                    grdMonthStat.DataSource = ds.Tables[1];
+                    grdMonthStat.DataBind();
+                }
+                if (ds.Tables[2].Rows.Count > 0)
+                {
+                    grdAvgStat.DataSource = ds.Tables[2];
+                    grdAvgStat.DataBind();
+                }
+            }
+        }
+    }
+}

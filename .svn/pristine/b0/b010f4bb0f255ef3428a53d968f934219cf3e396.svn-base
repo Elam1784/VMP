@@ -1,0 +1,443 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.HtmlControls;
+using System.Web.UI.WebControls;
+using VMP.Library;
+using VMP_1._0.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrVendor3a : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                if (Request.QueryString["VId"] != null)
+                {
+                    if (Request.QueryString["VId"].ToString().Contains("'"))
+                    {
+                        Response.Redirect("vmpUsrVendor1.aspx");
+                    }
+                    else if (!dbLibrary.isValidVendor(Request.QueryString["VId"]))
+                    {
+                        Response.Redirect("vmpUsrVendor1.aspx");
+                    }
+                    loadStepsProgress();
+                    repeaterDatabind();
+                    checkEqualOwnership();
+                    if (hdnFourthPageComplete.Value == "True")
+                    {
+                        divExecute.Attributes.Add("Style", "display:block");
+                        lnkGoToStatus.Attributes.Add("style", "display:block");
+                    }
+                    else
+                    {
+                        divExecute.Attributes.Add("Style", "display:none");
+                        lnkGoToStatus.Attributes.Add("style", "display:none");
+                    }
+                    // loadFirmInfo();
+                }
+                if (Request.QueryString["EditMode"] != null)
+                {
+                    heading.InnerText = "Edit Vendor";
+                }
+            }
+        }
+
+
+        //This method is used to check if there are 2 or more owners having equal percentage ownership.
+        private void checkEqualOwnership()
+        {
+            string qur = dbLibrary.idBuildQuery("[proc_OwnerPercentageEqual]", Request.QueryString["VId"]);
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if(ds.Tables[0].Rows.Count>0)
+            {
+                //divselectowner.Attributes.Add("class", "col-md-10");
+               // divPOwner.Attributes.Add("style", "display:block;");
+                h6alert.Visible = false;
+                ddlPOwner.DataSource = ds;
+                ddlPOwner.DataTextField = "OwnerName";
+                ddlPOwner.DataValueField = "ownerID";
+                ddlPOwner.DataBind();
+                ViewState["owners"] = ds;
+                lblFName.Text = ds.Tables[0].Rows[0]["ownerFirstName"].ToString().Length > 1 ? ds.Tables[0].Rows[0]["ownerFirstName"].ToString() : "&nbsp;&nbsp;";
+                lblLName.Text = ds.Tables[0].Rows[0]["ownerLastName"].ToString().Length > 1 ? ds.Tables[0].Rows[0]["ownerLastName"].ToString() : "&nbsp;&nbsp;";
+                lblMName.Text = ds.Tables[0].Rows[0]["ownerMidName"].ToString().Length > 1 ? ds.Tables[0].Rows[0]["ownerMidName"].ToString() : "&nbsp;&nbsp;";
+                lblPOwnership.Text = ds.Tables[0].Rows[0]["ownershipPercentage"].ToString().Length > 1 ? ds.Tables[0].Rows[0]["ownershipPercentage"].ToString() + " %" : "&nbsp;&nbsp;";
+               // hdnOwner.Value = ds.Tables[0].Rows[0]["ownerID"].ToString();
+
+                if (ds.Tables[1].Rows.Count == 1)
+                {
+                    ddlPOwner.SelectedValue = ds.Tables[1].Rows[0]["ownerID"].ToString();
+                    divselectowner.Attributes.Add("class", "col-md-10");
+                    hdnOwner.Value = ds.Tables[1].Rows[0]["ownerID"].ToString();
+                    lblFName.Text = ds.Tables[1].Rows[0]["ownerFirstName"].ToString();
+                    lblLName.Text = ds.Tables[1].Rows[0]["ownerLastName"].ToString();
+                    lblMName.Text = ds.Tables[1].Rows[0]["ownerMidName"].ToString();
+                    lblPOwnership.Text = ds.Tables[1].Rows[0]["ownershipPercentage"].ToString() + " %";
+                }
+                else
+                {
+                    h6alert.Visible = true;
+                }
+            }
+
+           
+            //else
+            //{
+            //    divselectowner.Attributes.Add("class", "col-md-10  alert alert-danger");
+            //}
+
+            //if (ds.Tables[0].Rows.Count != 1 && ds.Tables[0].Rows.Count != 0)
+            //{
+            //    divPOwner.Attributes.Add("style", "display:block;");
+            //    ddlPOwner.DataSource = ds;
+            //    ddlPOwner.DataTextField = "OwnerName";
+            //    ddlPOwner.DataValueField = "ownerID";
+            //    ddlPOwner.DataBind();
+            //    ViewState["owners"] = ds;
+            //    lblFName.Text = ds.Tables[0].Rows[0]["ownerFirstName"].ToString().Length>1? ds.Tables[0].Rows[0]["ownerFirstName"].ToString() : "&nbsp;&nbsp;";
+            //    lblLName.Text = ds.Tables[0].Rows[0]["ownerLastName"].ToString().Length>1? ds.Tables[0].Rows[0]["ownerLastName"].ToString(): "&nbsp;&nbsp;";
+            //    lblMName.Text = ds.Tables[0].Rows[0]["ownerMidName"].ToString().Length>1? ds.Tables[0].Rows[0]["ownerMidName"].ToString():"&nbsp;&nbsp;";
+            //    lblPOwnership.Text = ds.Tables[0].Rows[0]["ownershipPercentage"].ToString().Length>1? ds.Tables[0].Rows[0]["ownershipPercentage"].ToString() + " %" : "&nbsp;&nbsp;" ;
+            //    hdnOwner.Value = ds.Tables[0].Rows[0]["ownerID"].ToString();
+            //}
+            //else if (ds.Tables[0].Rows.Count == 1)
+            //{
+            //    hdnOwner.Value = ds.Tables[0].Rows[0]["ownerID"].ToString();
+            //    lblFName.Text = ds.Tables[0].Rows[0]["ownerFirstName"].ToString();
+            //    lblLName.Text = ds.Tables[0].Rows[0]["ownerLastName"].ToString();
+            //    lblMName.Text = ds.Tables[0].Rows[0]["ownerMidName"].ToString();
+            //    lblPOwnership.Text = ds.Tables[0].Rows[0]["ownershipPercentage"].ToString() + " %";
+            //}
+            else
+            {
+                updpnlPriOwner.Attributes.Add("style", "display:none");
+            }
+        }
+
+        private void repeaterDatabind()
+        {
+            string qur = "select * from Owners where vendorID=" + Request.QueryString["VId"] + "and isActive=1";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            rptSecOwners.DataSource = ds;
+            rptSecOwners.DataBind();
+        }
+
+        private void loadStepsProgress()
+        {
+            string qur = dbLibrary.idBuildQuery("proc_getNewVendorProgress", Request.QueryString["VId"].ToString());
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                if ((bool)ds.Tables[0].Rows[0]["step4"] == true)
+                {
+                    divStep1.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+                    divStep2.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+                    divStep4.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+                    divStep3.Attributes.Add("class", "col-xs-3 bs-wizard-step active activecomplete");
+                    hdnFourthPageComplete.Value = "True";
+                }
+                else
+                {
+                    divStep4.Attributes.Add("class", "col-xs-3 bs-wizard-step disabled");
+                    if ((bool)ds.Tables[0].Rows[0]["step3"] == true)
+                    {
+                        divStep1.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+                        divStep2.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+                        divStep3.Attributes.Add("class", "col-xs-3 bs-wizard-step active activecomplete");
+                    }
+                    else
+                    {
+                        divStep1.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+                        divStep2.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+                        divStep3.Attributes.Add("class", "col-xs-3 bs-wizard-step active");
+                    }
+                }
+            }
+            if (ds.Tables[1].Rows.Count > 0)
+            {
+                lblVendorHeading.Text = ds.Tables[1].Rows[0]["vendorName"].ToString();
+            }
+        }
+
+        protected void lnkStep1_Click(object sender, EventArgs e)
+        {
+            if (Request.QueryString["EditMode"] == null)
+            {
+                Response.Redirect("vmpUsrVendor1.aspx?VId=" + Request.QueryString["VId"]);
+            }
+            else
+            {
+                Response.Redirect("vmpUsrVendor1.aspx?VId=" + Request.QueryString["VId"] + "&EditMode=True");
+            }
+        }
+
+        protected void lnkStep2_Click(object sender, EventArgs e)
+        {
+            if (Request.QueryString["EditMode"] == null)
+            {
+                Response.Redirect("vmpUsrVendor2.aspx?VId=" + Request.QueryString["VId"]);
+            }
+            else
+            {
+                Response.Redirect("vmpUsrVendor2.aspx?VId=" + Request.QueryString["VId"] + "&EditMode=True");
+            }
+        }
+
+        protected void lnkStep4_Click(object sender, EventArgs e)
+        {
+            if (Request.QueryString["EditMode"] == null)
+            {
+                Response.Redirect("vmpUsrVendor4.aspx?VId=" + Request.QueryString["VId"]);
+            }
+            else
+            {
+                Response.Redirect("vmpUsrVendor4.aspx?VId=" + Request.QueryString["VId"] + "&EditMode=True");
+            }
+        }
+        protected void btnBack_Click(object sender, EventArgs e)
+        {
+            if (Request.QueryString["EditMode"] == null)
+            {
+                Response.Redirect("vmpUsrVendor3.aspx?VId=" + Request.QueryString["VId"]);
+            }
+            else
+            {
+                Response.Redirect("vmpUsrVendor3.aspx?VId=" + Request.QueryString["VId"] + "&EditMode=True");
+            }
+        }
+
+        protected void ddlPOwner_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            DataSet ds = (DataSet)ViewState["owners"];
+
+            DataTable dtowners = ds.Tables[0];
+
+            //Type fieldType = dtowners.Columns["ownerID"].DataType;
+
+            var results = from DataRow myRow in dtowners.Rows
+                          where (Int64)myRow["ownerID"] == Int64.Parse(ddlPOwner.SelectedValue.ToString())
+                          select myRow;
+            foreach (var m in results)
+            {
+                lblFName.Text = m["ownerFirstName"].ToString();
+                lblLName.Text = m["ownerLastName"].ToString();
+                lblMName.Text = m["ownerMidName"].ToString();
+                lblPOwnership.Text = m["ownershipPercentage"].ToString() + " %";
+            }
+            hdnOwner.Value = ddlPOwner.SelectedValue;
+        }
+
+        protected void rptSecOwners_ItemDataBound(object sender, RepeaterItemEventArgs e)
+        {
+            if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
+            {
+                HiddenField hdnOwnerID = (HiddenField)e.Item.FindControl("hdnOwnerID");
+                Repeater rptSecFirms = (Repeater)e.Item.FindControl("rptSecFirms");
+                string qur = "select * from SecondaryFirms where ownerID=" + hdnOwnerID.Value + " order by isActive desc";
+                // string qur = "select * from Owners where vendorID=" + Request.QueryString["VId"]+ " order by isActive desc";
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                if (ds != null)
+                {
+                    rptSecFirms.DataSource = ds;
+                    rptSecFirms.DataBind();
+                }
+            }
+        }
+
+        protected void rptSecFirms_ItemDataBound(object sender, RepeaterItemEventArgs e)
+        {
+            if (e.Item.ItemType == ListItemType.Footer || e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
+            {
+                DropDownList ddlPNAIC = (DropDownList)e.Item.FindControl("ddlPNAIC");
+                string qur = "EXEC [proc_getNAICCode]";
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                if (ds != null)
+                {
+                    //Primary NAIC Code
+                    ddlPNAIC.DataValueField = "naicId";
+                    ddlPNAIC.DataTextField = "naicCode";
+                    ddlPNAIC.DataSource = ds;
+                    ddlPNAIC.DataBind();
+                    ddlPNAIC.Items.Insert(0, new ListItem("--Select--", "-1"));
+                    ddlPNAIC.SelectedValue = "-1";
+                }
+            }
+            if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
+            {
+                DataRowView drv = e.Item.DataItem as DataRowView;
+
+                DropDownList ddlState = (DropDownList)e.Item.FindControl("ddlState");
+                DropDownList ddlPNAIC = (DropDownList)e.Item.FindControl("ddlPNAIC");
+                RadioButtonList radbutBusiness = (RadioButtonList)e.Item.FindControl("radbutBusiness");
+
+                ddlState.SelectedValue = drv.Row["state"].ToString();
+                ddlPNAIC.SelectedValue = drv.Row["primaryNAICId"].ToString();
+                if ((bool)drv.Row["similarBusiness"])
+                {
+                    radbutBusiness.Items[0].Selected = true;
+                    radbutBusiness.Items[1].Selected = false;
+                }
+                else
+                {
+                    radbutBusiness.Items[1].Selected = true;
+                    radbutBusiness.Items[0].Selected = false;
+                }
+                CheckBox chkbxActive = (CheckBox)e.Item.FindControl("chkbxActive");
+                HtmlGenericControl divActive = (HtmlGenericControl)e.Item.FindControl("divActive");
+                if ((bool)drv.Row["isActive"])
+                {
+                    chkbxActive.Checked = true;
+                    divActive.Attributes.Add("style", "border-style:outset");
+                }
+                else
+                {
+                    chkbxActive.Checked = false;
+                    divActive.Attributes.Add("style", "border-style:inset");
+                }
+            }
+        }
+
+        protected void ddlPNAIC_DataBound(object sender, EventArgs e)
+        {
+            DropDownList ddlPNAIC = (DropDownList)sender;
+            string qur = "EXEC [proc_getNAICCode]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds != null)
+            {
+                foreach (ListItem li in ddlPNAIC.Items)
+                {
+                    if (li.Value == "-1")
+                    {
+                        continue;
+                    }
+                    foreach (DataRow dr in ds.Tables[0].Rows)
+                    {
+                        if (li.Value == dr.ItemArray[0].ToString())
+                        {
+                            li.Attributes.Add("title", dr.ItemArray[2].ToString());
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        //This save secondary firm button click method will save all the field  values into the db.
+        protected void btnSaveSFirm_Click(object sender, EventArgs e)
+        {
+            Button save = (Button)sender;
+            foreach (RepeaterItem item in rptSecOwners.Items)
+            {
+                HiddenField hdnOwnerID = (HiddenField)item.FindControl("hdnOwnerID");
+                if (save.CommandArgument == hdnOwnerID.Value)
+                {
+                    Repeater rptSecFirms = (Repeater)item.FindControl("rptSecFirms");
+                    TextBox txtFirm = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("txtFirm") as TextBox;
+                    TextBox txtAddress = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("txtAddress") as TextBox;
+                    TextBox txtCity = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("txtCity") as TextBox;
+                    TextBox txtGross = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("txtGross") as TextBox;
+                    TextBox txtPOwnership = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("txtPOwnership") as TextBox;
+                    DropDownList ddlState = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("ddlState") as DropDownList;
+                    DropDownList ddlPNAIC = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("ddlPNAIC") as DropDownList;
+                    RadioButtonList radbutBusiness = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("radbutBusiness") as RadioButtonList;
+                    TextBox txtPS = rptSecFirms.Controls[rptSecFirms.Controls.Count - 1].Controls[0].FindControl("txtPS") as TextBox;
+                    if (txtFirm.Text.Trim() != "")
+                    {
+                        string qur = dbLibrary.idBuildQuery("[proc_VendorDetails3a]", "Insert", "", hdnOwnerID.Value, txtFirm.Text, txtAddress.Text, txtCity.Text, ddlState.SelectedValue, txtGross.Text.Replace(",", ""), txtPOwnership.Text, ddlPNAIC.SelectedValue, radbutBusiness.SelectedValue == "Yes" ? "1" : "0", txtPS.Text, "1", Request.QueryString["VId"], Session["UserId"].ToString());
+                        dbLibrary.idExecute(qur);
+                        Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+                    }
+                    repeaterDatabind();
+                    break;
+                }
+            }
+        }
+
+        //This method updates all the field values in the db.
+        protected void btnUpdateSFirm_Click(object sender, EventArgs e)
+        {
+            Button Update = (Button)sender;
+            foreach (RepeaterItem item in rptSecOwners.Items)
+            {
+                Repeater rptSecFirms = (Repeater)item.FindControl("rptSecFirms");
+                HiddenField hdnSecFirmId = ((Control)sender).Parent.FindControl("hdnSecFirmId") as HiddenField;
+                if (Update.CommandArgument == hdnSecFirmId.Value)
+                {
+                    TextBox txtFirm = ((Control)sender).Parent.FindControl("txtFirm") as TextBox;
+                    TextBox txtAddress = ((Control)sender).Parent.FindControl("txtAddress") as TextBox;
+                    TextBox txtCity = ((Control)sender).Parent.FindControl("txtCity") as TextBox;
+                    TextBox txtGross = ((Control)sender).Parent.FindControl("txtGross") as TextBox;
+                    TextBox txtPOwnership = ((Control)sender).Parent.FindControl("txtPOwnership") as TextBox;
+                    DropDownList ddlState = ((Control)sender).Parent.FindControl("ddlState") as DropDownList;
+                    DropDownList ddlPNAIC = ((Control)sender).Parent.FindControl("ddlPNAIC") as DropDownList;
+                    RadioButtonList radbutBusiness = ((Control)sender).Parent.FindControl("radbutBusiness") as RadioButtonList;
+                    TextBox txtPS = ((Control)sender).Parent.FindControl("txtPS") as TextBox;
+                    CheckBox chkbxActive = ((Control)sender).Parent.FindControl("chkbxActive") as CheckBox;
+                    if (txtFirm.Text.Trim() != "")
+                    {
+                        string qur = dbLibrary.idBuildQuery("[proc_VendorDetails3a]", "Update", Update.CommandArgument, "", txtFirm.Text, txtAddress.Text, txtCity.Text, ddlState.SelectedValue, txtGross.Text.Replace(",", ""), txtPOwnership.Text, ddlPNAIC.SelectedValue, radbutBusiness.SelectedValue == "Yes" ? "1" : "0", txtPS.Text, chkbxActive.Checked == true ? "1" : "0", Request.QueryString["VId"], Session["UserId"].ToString());
+                        dbLibrary.idExecute(qur);
+                        Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+                    }
+                    repeaterDatabind();
+                    break;
+                }
+            }
+        }
+
+        protected void btnProceed_Click(object sender, EventArgs e)
+        {
+            string qur = string.Empty;
+            qur = dbLibrary.idBuildQuery("[proc_VendorDetails3b]", ddlPOwner.SelectedValue, Request.QueryString["VId"], Session["UserId"].ToString());
+            dbLibrary.idExecute(qur);
+            if (Request.QueryString["EditMode"] == null)
+            {
+                Response.Redirect("vmpUsrVendor4.aspx?VId=" + Request.QueryString["VId"]);
+            }
+            else
+            {
+                Response.Redirect("vmpUsrVendor4.aspx?VId=" + Request.QueryString["VId"] + "&EditMode=True");
+            }
+        }
+
+        protected void btnExecuteRules_Click(object sender, EventArgs e)
+        {
+
+            string qur = string.Empty;
+            qur = dbLibrary.idBuildQuery("[proc_VendorDetails3b]", hdnOwner.Value != string.Empty ? hdnOwner.Value : ddlPOwner.SelectedValue, Request.QueryString["VId"], Session["UserId"].ToString());
+            dbLibrary.idExecute(qur);
+            if (hdnFourthPageComplete.Value == "True")
+            {
+                ruleLibrary.executeRule(Request.QueryString["VId"], Session["UserId"].ToString());
+            }
+            if (Request.QueryString["EditMode"] == null)
+            {
+                Response.Redirect("vmpUsrVendor4.aspx?VId=" + Request.QueryString["VId"]);
+            }
+            else
+            {
+                Response.Redirect("vmpUsrVendor4.aspx?VId=" + Request.QueryString["VId"] + "&EditMode=True");
+            }
+        }
+
+        protected void lnkGoToStatus_Click(object sender, EventArgs e)
+        {
+            if (Request.QueryString["VId"] != null)
+            {
+                Response.Redirect("vmpUsrStatus.aspx?VId=" + Request.QueryString["VId"]);
+            }
+        }
+    }
+}

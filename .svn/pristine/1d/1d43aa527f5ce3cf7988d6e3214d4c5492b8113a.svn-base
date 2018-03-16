@@ -1,0 +1,85 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.HtmlControls;
+using System.Web.UI.WebControls;
+
+namespace VMP_1._0
+{
+    public partial class test1 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (IsPostBack)
+            {
+                // if(divlist.Controls.Count!=0)
+                loadSecNaicCodes();
+            }
+        }
+
+        protected void chkbxSNaic_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            loadSecNaicCodes();
+            //txtSearch.Focus();
+        }
+
+        private void loadSecNaicCodes()
+        {
+            divlist.Controls.Clear();
+            foreach (ListItem li in chkbxSNaic.Items)
+            {
+                if (li.Selected == true)
+                {
+                    string text = li.Text;
+                    HtmlGenericControl div = new HtmlGenericControl();
+                    div.TagName = "div";
+                    //div.Attributes.Add("style", "width:105px, display:inline-block");
+                    div.Style.Add("width", "105px");
+                    div.Style.Add("display", "inline-block");
+                    div.ID = "div" + li.Value;
+                    div.Attributes.Add("runat", "server");
+                    HtmlGenericControl span = new HtmlGenericControl();
+                    span.TagName = "span";
+                    span.Attributes.Add("class", "userdef");
+                    HtmlGenericControl span1 = new HtmlGenericControl();
+                    span1.TagName = "span";
+                    span1.InnerText = text;
+                    LinkButton lnk = new LinkButton();
+                    lnk.ID = "lnk" + li.Value;
+                    lnk.CommandArgument = li.Value;
+                    lnk.CssClass = "custom";
+                    lnk.Text = "x";
+                    lnk.Click += new EventHandler(lnk_Click);
+                    span.Controls.Add(span1);
+                    span.Controls.Add(lnk);
+                    div.Controls.Add(span);
+                    divlist.Controls.Add(div);
+                }
+                else
+                {
+                    string id = "div" + li.Value;
+                    Control myControl1 = divlist.FindControl(id);
+                    if (myControl1 != null)
+                    {
+                        divlist.Controls.Remove(myControl1);
+                    }
+                }
+            }
+        }
+
+        protected void lnk_Click(object sender, EventArgs e)
+        {
+            LinkButton lnk = sender as LinkButton;
+            foreach (ListItem li in chkbxSNaic.Items)
+            {
+                if (li.Value == lnk.CommandArgument)
+                {
+                    li.Selected = false;
+                }
+            }
+            loadSecNaicCodes();
+        }
+    }
+}

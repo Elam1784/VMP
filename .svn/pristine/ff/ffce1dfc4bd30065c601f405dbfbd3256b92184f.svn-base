@@ -1,0 +1,362 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.Admin
+{
+    public partial class vmpAdmRegion : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!this.IsPostBack)
+            {
+                LoadviewEDR();
+                multiviewRegion.SetActiveView(viewEDR);
+            }
+        }
+        private void LoadviewEDR()
+        {
+            string qur = "select * from Region";
+            if (dbLibrary.idHasRows(qur))
+            {
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                grdRegionClass.DataSource = ds;
+                grdRegionClass.DataBind();
+                lblErrorED.Visible = false;
+            }
+            else
+            {
+                lblErrorED.Visible = true;
+            }
+            loadClassifications();
+        }
+
+        protected void grdRegionClass_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                e.Row.Attributes["onmouseover"] = "this.style.cursor='pointer';this.style.textDecoration='underline';";
+                e.Row.Attributes["onmouseout"] = "this.style.textDecoration='none';";
+                e.Row.Attributes["onclick"] = Page.ClientScript.GetPostBackClientHyperlink(grdRegionClass, "Select$" + e.Row.RowIndex);
+                e.Row.ToolTip = "Click to select this row.";
+            }
+        }
+
+        protected void grdRegionClass_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            foreach (ListItem li in chkboxClassification.Items)
+            {
+                if (li.Selected)
+                {
+                    li.Selected = false;
+                }
+            }
+            foreach (GridViewRow row in grdRegionClass.Rows)
+            {
+                if (row.RowIndex == grdRegionClass.SelectedIndex)
+                {
+                    row.BackColor = ColorTranslator.FromHtml("#6192d3");
+                    row.ForeColor = Color.White;
+                    row.ToolTip = string.Empty;
+                    string text = grdRegionClass.SelectedRow.Cells[0].Text;
+                    string value = grdRegionClass.SelectedDataKey.Value.ToString();
+                    string qur = "Select classificationId from RegionClassification where regionId='" + grdRegionClass.SelectedDataKey.Value + "'";
+                    if (dbLibrary.idHasRows(qur))
+                    {
+                        DataSet ds = dbLibrary.idGetCustomResult(qur);
+                        foreach (DataRow row1 in ds.Tables[0].Rows)
+                        {
+                            foreach (ListItem li in chkboxClassification.Items)
+                            {
+                                if (row1["classificationId"].ToString() == li.Value.ToString())
+                                {
+
+                                    int index = chkboxClassification.Items.IndexOf(li);
+                                    chkboxClassification.Items[index].Selected = true;
+                                }
+                            }
+                        }
+                    }
+                    btnUpdateRC.CommandArgument = value;
+                    btnUpdateRC.Visible = true;
+                }
+                else
+                {
+                    row.BackColor = ColorTranslator.FromHtml("#FFFFFF");
+                    row.ForeColor = Color.Black;
+                    row.ToolTip = "Click to select this row.";
+                }
+            }
+            UpdatePanel4.Update();
+        }
+
+        private void loadClassifications()
+        {
+            string qry = "Select * from Classification";
+            if (dbLibrary.idHasRows(qry))
+            {
+                DataSet ds = dbLibrary.idGetCustomResult(qry);
+                chkboxClassification.DataSource = ds;
+                chkboxClassification.DataTextField = "ClassificationDesc";
+                chkboxClassification.DataValueField = "ClassificationId";
+                chkboxClassification.DataBind();
+            }
+        }
+
+        protected void lnkbtnEDR_Click(object sender, EventArgs e)
+        {
+            liEDR.Attributes.Add("class", "active");
+            liMR.Attributes["class"] = "";
+            liMC.Attributes["class"] = "";
+            btnUpdateC.Visible = false;
+            btnUpdateR.Visible = false;
+            multiviewRegion.SetActiveView(viewEDR);
+        }
+
+        protected void lnkbtnMC_Click(object sender, EventArgs e)
+        {
+            liEDR.Attributes["class"] = "";
+            liMC.Attributes.Add("class", "active");
+            liMR.Attributes["class"] = "";
+            btnUpdateC.Visible = false;
+            btnUpdateR.Visible = false;
+            multiviewRegion.SetActiveView(viewC);
+        }
+
+        protected void lnkbtnMR_Click(object sender, EventArgs e)
+        {
+            liEDR.Attributes["class"] = "";
+            liMC.Attributes["class"] = "";
+            liMR.Attributes.Add("class", "active");
+            btnUpdateC.Visible = false;
+            btnUpdateR.Visible = false;
+            multiviewRegion.SetActiveView(viewR);
+        }
+
+        protected void grdClassification_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                e.Row.Attributes["onmouseover"] = "this.style.cursor='pointer';this.style.textDecoration='underline';";
+                e.Row.Attributes["onmouseout"] = "this.style.textDecoration='none';";
+                e.Row.Attributes["onclick"] = Page.ClientScript.GetPostBackClientHyperlink(grdClassification, "Select$" + e.Row.RowIndex);
+                e.Row.ToolTip = "Click to select this row.";
+            }
+        }
+
+        protected void grdClassification_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            foreach (GridViewRow row in grdClassification.Rows)
+            {
+                if (row.RowIndex == grdClassification.SelectedIndex)
+                {
+                    row.BackColor = ColorTranslator.FromHtml("#6192d3");
+                    row.ForeColor = Color.White;
+                    row.ToolTip = string.Empty;
+                    string text = grdClassification.SelectedRow.Cells[0].Text;
+                    string value = grdClassification.SelectedDataKey.Value.ToString();
+                    btnUpdateC.Visible = true;
+                    btnUpdateC.CommandName = text;
+                    btnUpdateC.CommandArgument = value;
+                }
+            }
+        }
+
+        protected void viewC_Load(object sender, EventArgs e)
+        {
+            string qur = "select * from Classification";
+            if (dbLibrary.idHasRows(qur))
+            {
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                grdClassification.DataSource = ds;
+                grdClassification.DataBind();
+                lblErrorC.Visible = false;
+            }
+            else
+            {
+                lblErrorC.Visible = true;
+            }
+        }
+
+        protected void btnUpdateC_Click(object sender, EventArgs e)
+        {
+
+            txtClassification.Text = btnUpdateC.CommandName;
+            btnSaveC.CommandArgument = btnUpdateC.CommandArgument;
+            btnUpdateC.Visible = false;
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+        }
+
+        protected void btnSaveC_Click(object sender, EventArgs e)
+        {
+            if (grdClassification.SelectedValue.ToString() == btnSaveC.CommandArgument)
+            {
+                dbLibrary.idUpdateTable("Classification",
+                    "ClassificationId='" + btnSaveC.CommandArgument + "'",
+                    "ClassificationDesc", txtClassification.Text);
+                viewC_Load(sender, e);
+                btnUpdateC.Visible = false;
+                Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+            }
+        }
+
+        protected void grdRegion_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            foreach (GridViewRow row in grdRegion.Rows)
+            {
+                if (row.RowIndex == grdRegion.SelectedIndex)
+                {
+                    row.BackColor = ColorTranslator.FromHtml("#6192d3");
+                    row.ForeColor = Color.White;
+                    row.ToolTip = string.Empty;
+                    string text = grdRegion.SelectedRow.Cells[0].Text;
+                    string value = grdRegion.SelectedDataKey.Value.ToString();
+                    btnUpdateR.Visible = true;
+                    btnUpdateR.CommandName = text;
+                    btnUpdateR.CommandArgument = value;
+                    UpdatePanel2.Update();
+                }
+            }
+        }
+
+        protected void grdRegion_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                e.Row.Attributes["onmouseover"] = "this.style.cursor='pointer';this.style.textDecoration='underline';";
+                e.Row.Attributes["onmouseout"] = "this.style.textDecoration='none';";
+                e.Row.Attributes["onclick"] = Page.ClientScript.GetPostBackClientHyperlink(grdRegion, "Select$" + e.Row.RowIndex);
+                e.Row.ToolTip = "Click to select this row.";
+            }
+        }
+
+        protected void btnUpdateR_Click(object sender, EventArgs e)
+        {
+            txtRegion.Text = btnUpdateR.CommandName;
+            btnSaveR.CommandArgument = btnUpdateR.CommandArgument;
+            btnUpdateR.Visible = false;
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModalRegion();", true);
+        }
+
+        protected void btnSaveR_Click(object sender, EventArgs e)
+        {
+            if (grdRegion.SelectedValue.ToString() == btnSaveR.CommandArgument)
+            {
+                dbLibrary.idUpdateTable("Region",
+                    "regionId='" + btnSaveR.CommandArgument + "'",
+                    "region", txtRegion.Text);
+                viewR_Load(sender, e);
+                btnUpdateR.Visible = false;
+                Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+            }
+        }
+
+        protected void viewR_Load(object sender, EventArgs e)
+        {
+            string qur = "select * from Region";
+            if (dbLibrary.idHasRows(qur))
+            {
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                grdRegion.DataSource = ds;
+                grdRegion.DataBind();
+                lblErrorR.Visible = false;
+            }
+            else
+            {
+                lblErrorR.Visible = true;
+            }
+        }
+
+        protected void btnUpdateRC_Click(object sender, EventArgs e)
+        {
+            btnUpdateRC.Visible = false;
+            string qur = "Select * from RegionClassification where regionId='" + btnUpdateRC.CommandArgument + "'";
+            if (dbLibrary.idHasRows(qur))
+            {
+                qur = "Delete from RegionClassification where regionId='" + btnUpdateRC.CommandArgument + "'";
+                dbLibrary.idExecute(qur);
+            }
+            foreach (ListItem li in chkboxClassification.Items)
+            {
+                if (li.Selected == true)
+                {
+                    dbLibrary.idInsertInto("RegionClassification",
+                        "regionId", btnUpdateRC.CommandArgument,
+                        "classificationId", li.Value);
+                }
+            }
+            Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+        }
+
+        protected void btnSaveNewC_Click(object sender, EventArgs e)
+        {
+            dbLibrary.idInsertInto("Classification",
+                "ClassificationDesc", txtClassificationNew.Text);
+            //  loadClassifications();
+            viewC_Load(sender, e);
+            Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+        }
+
+        protected void btnSaveRNew_Click(object sender, EventArgs e)
+        {
+            dbLibrary.idInsertInto("Region",
+                "region", txtRegionNew.Text);
+            viewR_Load(sender, e);
+            Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+        }
+
+        protected void grdRegionClass_SelectedIndexChanged1(object sender, EventArgs e)
+        {
+            foreach (ListItem li in chkboxClassification.Items)
+            {
+                if (li.Selected)
+                {
+                    li.Selected = false;
+                }
+            }
+            foreach (GridViewRow row in grdRegionClass.Rows)
+            {
+                if (row.RowIndex == grdRegionClass.SelectedIndex)
+                {
+                    row.BackColor = ColorTranslator.FromHtml("#6192d3");
+                    row.ForeColor = Color.White;
+                    row.ToolTip = string.Empty;
+                    string text = grdRegionClass.SelectedRow.Cells[0].Text;
+                    string value = grdRegionClass.SelectedDataKey.Value.ToString();
+                    string qur = "Select classificationId from RegionClassification where regionId='" + grdRegionClass.SelectedDataKey.Value + "'";
+                    if (dbLibrary.idHasRows(qur))
+                    {
+                        DataSet ds = dbLibrary.idGetCustomResult(qur);
+                        foreach (DataRow row1 in ds.Tables[0].Rows)
+                        {
+                            foreach (ListItem li in chkboxClassification.Items)
+                            {
+                                if (row1["classificationId"].ToString() == li.Value.ToString())
+                                {
+
+                                    int index = chkboxClassification.Items.IndexOf(li);
+                                    chkboxClassification.Items[index].Selected = true;
+                                }
+                            }
+                        }
+                    }
+                    btnUpdateRC.CommandArgument = value;
+                    btnUpdateRC.Visible = true;
+                }
+                else
+                {
+                    row.BackColor = ColorTranslator.FromHtml("#FFFFFF");
+                    row.ForeColor = Color.Black;
+                    row.ToolTip = "Click to select this row.";
+                }
+            }
+            UpdatePanel4.Update();
+        }
+    }
+}

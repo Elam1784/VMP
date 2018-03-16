@@ -1,0 +1,543 @@
+﻿using Microsoft.Office.Interop.Word;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+using VMP_1._0.Library;
+using System.Net.Mail;
+using System.Web.Configuration;
+using System.Net.Mime;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrStatus : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                string appTypes = ruleLibrary.getApplicationType(Request.QueryString["VId"]); ;
+                lblStatus.Text = getStatus(Request.QueryString["VId"]);
+                if (lblStatus.Text == "Approved")
+                {
+                    lblStatus.Attributes.Add("style", "color:green");
+                    // radbtnApprove.Checked = true;
+                }
+                else
+                {
+                    if (appTypes != string.Empty)
+                    {
+                        if (appTypes.Contains(","))
+                        {
+                            lblAppType.Text = "Vendor might be eligible under other application type(s) - " + appTypes.Substring(appTypes.IndexOf(',') + 1);
+                            divOtherAppType.Attributes.Add("style", "display:block;text-align:center");
+                        }
+                    }
+                    else
+                    {
+                        lblStatus.Text = "Denied";
+                        lblAppType.Text = "Vendor is not applicable for any of the application types";
+                        divOtherAppType.Attributes.Add("style", "display:block;text-align:center");
+                        // radbtnDeny.Checked = true;
+                    }
+                    lblStatus.Attributes.Add("style", "color:red");
+                }
+                if (lblStatus.Text == "Approved")
+                {
+                    radbtnApprove.Checked = true;
+                }
+                else if (lblStatus.Text == "Denied")
+                {
+                    radbtnDeny.Checked = true;
+                }
+                else if (lblStatus.Text == "Pending")
+                {
+                    radbtnPending.Checked = true;
+                }
+                else if (lblStatus.Text == "Removed")
+                {
+                    radbtnRemove.Checked = true;
+                }
+            }
+        }
+        private string getStatus(string vendorID)
+        {
+            string qur = "select TOP 1 status from VendorCertStatus where vendorId='" + vendorID + "' ORDER BY certLogID DESC ";
+            vendorID = dbLibrary.idGetAFieldByQuery(qur);
+            return vendorID;
+        }
+        protected void btnRecommend_Click(object sender, EventArgs e)
+        {
+            txtOverrideReason.Text = "";
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+        }
+
+        protected void btnLoad_Click(object sender, EventArgs e)
+        {
+            if (ddlLetters.SelectedIndex != 0)
+            {
+                divError.Attributes.Add("style", "display:none");
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Select Any Letter to Download";
+                return;
+            }
+            string qur = dbLibrary.idBuildQuery("[proc_getDataForLetter]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString(), ddlLetters.SelectedValue);
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                string vendorname = ds.Tables[0].Rows[0]["vendorName"].ToString(), specialistname = ds.Tables[1].Rows[0]["SpecialistName"].ToString();
+                if(!(Directory.Exists(Server.MapPath("~/Letters"))))
+                {
+                    Directory.CreateDirectory(Server.MapPath("~/Letters"));
+                }
+                if (!(Directory.Exists(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname))))
+                {
+                    Directory.CreateDirectory(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname));
+                }
+                if (!(Directory.Exists(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname + "/" + vendorname))))
+                {
+                    Directory.CreateDirectory(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname + "/" + vendorname));
+                }
+
+                string destFile = Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname + "/" + vendorname + "/" + vendorname + "_" + ddlLetters.SelectedValue + ".docx");
+                string sourceFile = Server.MapPath(WebConfigurationManager.AppSettings["TemplatePath"] + ddlLetters.SelectedValue + ".docx");
+                File.Copy(sourceFile, destFile, true);
+                object fileName = destFile;
+                Microsoft.Office.Interop.Word.Application wordApp = new Microsoft.Office.Interop.Word.Application { Visible = false };
+                Microsoft.Office.Interop.Word.Document aDoc = wordApp.Documents.Open(fileName, ReadOnly: false, Visible: false);
+                object Unknown = Type.Missing;
+                aDoc.Activate();
+                try
+                {
+                    FindAndReplace(wordApp, "[Date]", DateTime.Now.ToString("MMMM dd, yyyy"));
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["title"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Mr/Ms]", ds.Tables[0].Rows[0]["title"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["ownerFirstName"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Owner First Name]", ds.Tables[0].Rows[0]["ownerFirstName"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["ownerLastName"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Owner Last Name]", ds.Tables[0].Rows[0]["ownerLastName"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["vendorName"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Company Name]", ds.Tables[0].Rows[0]["vendorName"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["CompanyAddress"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Address]", ds.Tables[0].Rows[0]["CompanyAddress"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["city"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[City]", ds.Tables[0].Rows[0]["city"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["state"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[State]", ds.Tables[0].Rows[0]["state"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["zipCode"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Zip Code]", ds.Tables[0].Rows[0]["zipCode"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["webAddress"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Company Website]", ds.Tables[0].Rows[0]["webAddress"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["swiftNumber"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Vendor ID #]", ds.Tables[0].Rows[0]["swiftNumber"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["fax"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Fax Number]", ds.Tables[0].Rows[0]["fax"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["CompanyAddress"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Street Address]", ds.Tables[0].Rows[0]["CompanyAddress"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["telephone"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Phone Number]", ds.Tables[0].Rows[0]["telephone"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["productDesc"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[Business Description]", ds.Tables[0].Rows[0]["productDesc"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["naicCode"].ToString()))
+                    {
+                        FindAndReplace(wordApp, "[PNAICS]", ds.Tables[0].Rows[0]["naicCode"].ToString());
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["finalClassification"].ToString()))
+                    {
+                        switch (ds.Tables[0].Rows[0]["finalClassification"].ToString().Substring(0, 1))
+                        {
+                            case "A":
+                                FindAndReplace(wordApp, "[Designation]", "Asian/Pacific");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(A)");
+                                break;
+                            case "B":
+                                FindAndReplace(wordApp, "[Designation]", "Black");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(B)");
+                                break;
+                            case "H":
+                                FindAndReplace(wordApp, "[Designation]", "Hispanic");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(H)");
+                                break;
+                            case "I":
+                                FindAndReplace(wordApp, "[Designation]", "Indiginess American");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(I)");
+                                break;
+                            case "D":
+                                FindAndReplace(wordApp, "[Designation]", "Physical Disability");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(D)");
+                                break;
+                            case "W":
+                                FindAndReplace(wordApp, "[Designation]", "Woman");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(W)");
+                                break;
+                            case "R":
+                                FindAndReplace(wordApp, "[Designation]", "Rehabilitation Facilities");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(R)");
+                                break;
+                            case "V":
+                                FindAndReplace(wordApp, "[Designation]", "Veteran");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(V)");
+                                break;
+                            case "S":
+                                FindAndReplace(wordApp, "[Designation]", "Service Disabled Veteran");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(S)");
+                                break;
+                            case "L":
+                                FindAndReplace(wordApp, "[Designation]", "Labor Surplus County");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(L)");
+                                break;
+                            case "M":
+                                FindAndReplace(wordApp, "[Designation]", "70% Median Income County");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(M)");
+                                break;
+                            case "T":
+                                FindAndReplace(wordApp, "[Designation]", "Targeted Neighborhood");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(T)");
+                                break;
+                            case "E":
+                                FindAndReplace(wordApp, "[Designation]", "Enterprise Zone");
+                                FindAndReplace(wordApp, "[(Designation Letter)]", "(E)");
+                                break;
+
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["certDate"].ToString()))
+                    {
+                        DateTime date = DateTime.Parse(ds.Tables[0].Rows[0]["certDate"].ToString());
+                        FindAndReplace(wordApp, "[Certification Date]", date.ToString("MMMM dd, yyyy"));
+                    }
+                    if (ds.Tables[0].Rows.Count > 0)
+                    {
+                        FindAndReplace(wordApp, "[Vendor’s email address]", ds.Tables[1].Rows[0]["emailId"].ToString());
+                    }
+                    if (ds.Tables[1].Rows.Count > 0)
+                    {
+                        if (!string.IsNullOrEmpty(ds.Tables[1].Rows[0]["SpecialistName"].ToString()))
+                        {
+                            FindAndReplace(wordApp, "[Vendor Specialist Name]", ds.Tables[1].Rows[0]["SpecialistName"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[1].Rows[0]["phoneNumber"].ToString()))
+                        {
+                            FindAndReplace(wordApp, "[Vendor Specialist phone number]", ds.Tables[1].Rows[0]["phoneNumber"].ToString());
+                        }
+                    }
+                    if (ds.Tables[3].Rows.Count > 0)
+                    {
+                        string sNAICSCodes = string.Empty;
+
+                        foreach (DataRow r in ds.Tables[3].Rows)
+                        {
+                            sNAICSCodes = sNAICSCodes + r["naicCode"].ToString() + ",";
+                        }
+                        FindAndReplace(wordApp, "[SNAICS]", sNAICSCodes.Substring(0, sNAICSCodes.Length - 2));
+                    }
+                    else
+                    {
+                        FindAndReplace(wordApp, "[SNAICS]", string.Empty);
+                    }
+                    if (ddlLetters.SelectedValue == "RECERT REQ")
+                    {
+                        if (ds.Tables[5].Rows.Count > 0)
+                        {
+                            string owners = string.Empty;
+                            foreach (DataRow dr in ds.Tables[5].Rows)
+                            {
+                                owners = owners +"                                                "+ dr["ownershipPercentage"].ToString() + " % " + dr["ownerFirstName"].ToString() + " " + dr["ownerLastName"].ToString().Trim() + Environment.NewLine;
+                            }
+                            FindAndReplace(wordApp, "[Owners list]", owners);
+                        }
+                    }
+                    object replaceAll = Microsoft.Office.Interop.Word.WdReplace.wdReplaceAll;
+                    foreach (Microsoft.Office.Interop.Word.Section section in aDoc.Sections)
+                    {
+                        Microsoft.Office.Interop.Word.HeadersFooters footers = section.Footers;
+                        foreach (Microsoft.Office.Interop.Word.HeaderFooter footer in footers)
+                        {
+                            Range footerRange = footer.Range;
+                            footerRange.Find.ClearFormatting();
+                            footerRange.Find.Replacement.ClearFormatting();
+                            footerRange.Find.Text = "[Vendor Specialist Phone]";
+                            footerRange.Find.Replacement.Text = ds.Tables[1].Rows[0]["phoneNumber"].ToString();
+                            footerRange.Find.Wrap = WdFindWrap.wdFindContinue;
+                            footerRange.Find.Execute(ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref replaceAll, ref Unknown, ref Unknown, ref Unknown, ref Unknown);
+                            footerRange.Find.Text = "[Vendor Specialist Email]";
+                            footerRange.Find.Replacement.Text = ds.Tables[1].Rows[0]["emailId"].ToString();
+                            footerRange.Find.Execute(ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref replaceAll, ref Unknown, ref Unknown, ref Unknown, ref Unknown);
+                        }
+                    }
+
+                    aDoc.SaveAs(ref fileName,
+                ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown,
+                ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown,
+                ref Unknown, ref Unknown, ref Unknown, ref Unknown, ref Unknown);
+
+                }
+                catch (Exception ex)
+                {
+                }
+                finally
+                {
+                    aDoc.Close(WdSaveOptions.wdSaveChanges);
+                    ((_Application)wordApp).Quit(ref Unknown, ref Unknown, ref Unknown);
+                    Response.Clear();
+                    Response.ContentType = "Application/octet-stream";
+                    Response.AddHeader("Content-Disposition",string.Format("attachment; filename = \"{0}\"",System.IO.Path.GetFileName(vendorname + "_" + ddlLetters.SelectedValue + ".docx")));
+                   // Response.AddHeader("Content-Disposition", "attachment; filename=\"{0}\"",vendorname + "_" + ddlLetters.SelectedValue + ".docx");
+                    Response.TransmitFile(destFile);
+                    Response.End();
+                }
+            }
+        }
+
+        private void FindAndReplace(Microsoft.Office.Interop.Word.Application doc, object findText, object replaceWithText)
+        {
+            //options
+            object matchCase = false;
+            object matchWholeWord = true;
+            object matchWildCards = false;
+            object matchSoundsLike = false;
+            object matchAllWordForms = false;
+            object forward = true;
+            object format = false;
+            object matchKashida = false;
+            object matchDiacritics = false;
+            object matchAlefHamza = false;
+            object matchControl = false;
+            object read_only = false;
+            object visible = true;
+            object replace = 2;
+            object wrap = 1;
+            //execute find and replace
+            doc.Selection.Find.Execute(ref findText, ref matchCase, ref matchWholeWord,
+                ref matchWildCards, ref matchSoundsLike, ref matchAllWordForms, ref forward, ref wrap, ref format, ref replaceWithText, ref replace,
+                ref matchKashida, ref matchDiacritics, ref matchAlefHamza, ref matchControl);
+        }
+
+        protected void btnSavePreview_Click(object sender, EventArgs e)
+        {
+            if (ddlLetters.SelectedIndex != 0)
+            {
+                divError.Attributes.Add("style", "display:none");
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Select Appropriate Letter";
+                return;
+            }
+            if (fileUploader.HasFile)
+            {
+                string qur = dbLibrary.idBuildQuery("[proc_getDataForLetter]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString(), ddlLetters.SelectedValue);
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                if (ds.Tables[0].Rows.Count > 0)
+                {
+                    string vendorname = ds.Tables[0].Rows[0]["vendorName"].ToString(), specialistname = ds.Tables[1].Rows[0]["SpecialistName"].ToString();
+                    if (!(Directory.Exists(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname))))
+                    {
+                        Directory.CreateDirectory(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname));
+                    }
+                    if (!(Directory.Exists(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname + "/" + vendorname))))
+                    {
+                        Directory.CreateDirectory(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname + "/" + vendorname));
+                    }
+                    string destFile = Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname + "/" + vendorname + "/" + vendorname + "_" + ddlLetters.SelectedValue + ".docx");
+                    divError.Attributes.Add("style", "display:none");
+                    string extension = fileUploader.FileName.Split('.')[1];
+                    if (extension == "docx")
+                    {
+                        DirectoryInfo directory = new DirectoryInfo(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname + "/" + vendorname));
+                        foreach (FileInfo file in directory.GetFiles())
+                        {
+                            if (file.Extension.ToLower().Equals(".docx"))
+                            {
+                                file.Delete();
+                            }
+                        }
+                        fileUploader.SaveAs(destFile);
+                        object sourcepath = destFile;
+                        Application newApp = new Application();
+                        Documents d = newApp.Documents;
+                        object Unknown = Type.Missing;
+                        Document od = d.Open(ref sourcepath, ref Unknown,
+                                                 ref Unknown, ref Unknown, ref Unknown,
+                                                 ref Unknown, ref Unknown, ref Unknown,
+                                                 ref Unknown, ref Unknown, ref Unknown,
+                                                 ref Unknown, ref Unknown, ref Unknown, ref Unknown);
+                        newApp.Visible = false;
+                        od.Activate();
+                        try
+                        {
+                            object fileFormat = WdSaveFormat.wdFormatPDF;
+                            if (ds.Tables[2].Rows.Count > 0)
+                            {
+                                string fileName = ds.Tables[2].Rows[0]["filePath"].ToString().Split('_')[2].ToString();
+                                int count = int.Parse(fileName.Split('.')[0].ToString());
+                                count++;
+                                sourcepath = sourcepath.ToString().Replace(".docx", "_" + count + ".pdf");
+                            }
+                            else
+                            {
+                                sourcepath = sourcepath.ToString().Replace(".docx", "_1.pdf");
+                            }
+                            od.SaveAs(ref sourcepath, ref fileFormat,
+                                        ref Unknown, ref Unknown, ref Unknown,
+                                        ref Unknown, ref Unknown, ref Unknown,
+                                        ref Unknown, ref Unknown, ref Unknown,
+                                        ref Unknown, ref Unknown, ref Unknown,
+                                        ref Unknown, ref Unknown);
+                            string qry = dbLibrary.idBuildQuery("[proc_saveLetterInfo]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString(), ddlLetters.SelectedValue, sourcepath.ToString());
+                            btnSendLetter.CommandName = dbLibrary.idGetAFieldByQuery(qry);
+                            btnSendLetter.CommandArgument = sourcepath.ToString();
+                            int n = sourcepath.ToString().Split('\\').Length;
+                            iframepdf.Src = "../" + sourcepath.ToString().Split('\\')[n - 4] + "/" + sourcepath.ToString().Split('\\')[n - 3] + "/" + sourcepath.ToString().Split('\\')[n - 2] + "/" + sourcepath.ToString().Split('\\')[n - 1];
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                        finally
+                        {
+                            od.Close(WdSaveOptions.wdSaveChanges);
+                            ((_Application)newApp).Quit(ref Unknown, ref Unknown, ref Unknown);
+                            File.Delete(destFile);
+                        }
+                        txtSubject.Text = ds.Tables[0].Rows[0]["vendorName"].ToString() + " - " + lblStatus.Text;
+                        if (ds.Tables[4].Rows.Count > 0)
+                        {
+                            txtBody.Text = ds.Tables[4].Rows[0]["eMailBody"].ToString();
+
+                        }
+                        lblLetterMsg.Text = "Letter Generated Successfully!!!";
+                        lblLetterMsg.Attributes.Add("style", "color:green");
+                        iframepdf.Visible = true;
+                        btnSavePreview.Visible = true;
+                        ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "LetterPreview();", true);
+                    }
+                    else
+                    {
+                        divError.Attributes.Add("style", "display:block");
+                        lblError.Text = "Invalid File!!Please Upload Only docx file";
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Please Upload the File to Preview";
+                return;
+            }
+        }
+        protected void lnkRules_Click(object sender, EventArgs e)
+        {
+            string qur = "select description, status from   VendorRulesResult where vendorId=" + Request.QueryString["VId"];
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            grdRulesView.DataSource = ds;
+            grdRulesView.DataBind();
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModalRulesView();", true);
+        }
+
+        protected void btnSendLetter_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string qur = dbLibrary.idBuildQuery("[proc_getDataToEmail]", Session["UserId"].ToString(), Request.QueryString["VId"].ToString());
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["emailId"].ToString()))
+                {
+                    System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage();
+                    SmtpClient SmtpServer = new SmtpClient(WebConfigurationManager.AppSettings["SmtpClient"]);
+                    mail.From = new MailAddress(WebConfigurationManager.AppSettings["FromEmailAddress"]);
+                    mail.To.Add(ds.Tables[0].Rows[0]["emailId"].ToString());
+                    mail.To.Add(WebConfigurationManager.AppSettings["BccEmailAddress"]);
+                    mail.Subject = txtSubject.Text;
+                    mail.IsBodyHtml = true;
+                    string path = Server.MapPath(WebConfigurationManager.AppSettings["SignatureLogo"]);
+                    LinkedResource Img = new LinkedResource(path, MediaTypeNames.Image.Jpeg);
+                    Img.ContentId = "MyImage";
+                    string str = @"<table style='font-family:Calibri;color:#003865'><tr><td> Dear " + ds.Tables[0].Rows[0]["vendorName"].ToString() + "</td></tr><tr><td>" + txtBody.Text + "</td></tr><tr></tr><tr></tr><tr></tr><tr><td><img src=cid:MyImage  id='img' alt='' width='100px' height='100px'/></td></tr><tr><td><b>" + ds.Tables[1].Rows[0]["SpecialistName"].ToString() + " | Vendor Specialist</b></td></tr><tr><td>" + WebConfigurationManager.AppSettings["AddressLine1"] + "</td></tr><tr><td>" + WebConfigurationManager.AppSettings["AddressLine2"] + "</td></tr><tr><td>" + ds.Tables[1].Rows[0]["phoneNumber"].ToString() + "</td></tr><tr><td>" + ds.Tables[1].Rows[0]["emailId"].ToString() + "</td></tr></table>";
+                    AlternateView AV = AlternateView.CreateAlternateViewFromString(str, null, MediaTypeNames.Text.Html);
+                    AV.LinkedResources.Add(Img);
+                    mail.AlternateViews.Add(AV);
+                    Attachment attachment = new Attachment(btnSendLetter.CommandArgument);
+                    mail.Attachments.Add(attachment);
+                    SmtpServer.Port = int.Parse(WebConfigurationManager.AppSettings["EmailPort"]);
+                    SmtpServer.EnableSsl = Boolean.Parse(WebConfigurationManager.AppSettings["EnableSSL"]);
+                    SmtpServer.Send(mail);
+                    divError.Attributes.Add("style", "display:block");
+                    lblError.Style.Value = "color: green";
+                    lblError.Text = "Letter Sent Successfully!!!";
+                    string qry = dbLibrary.idBuildQuery("[proc_saveE-MailInfo]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString(), btnSendLetter.CommandName, ddlLetters.SelectedValue,txtSubject.Text,txtBody.Text,Session["UserId"].ToString());
+                    string eMailStatus = dbLibrary.idGetAFieldByQuery(qry);
+                    if (eMailStatus == string.Empty)
+                    {
+                        lblError.Style.Value = "color: red";
+                        lblError.Text = "Letter Sent Successfully!!! But error while saving the eMail info in Database.";
+                    }
+                    txtBody.Text = "";
+                    txtSubject.Text = "";
+                }
+                else
+                {
+                    divError.Attributes.Add("style", "display:block");
+                    lblError.Text = "No e-Mail ID present for this Vendor, Please update e-Mail ID and Send Letter.";
+                }
+            }
+            catch (Exception ex)
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Error While Sending the Letter, Please Try Again !!!";
+            }
+        }
+
+        protected void btnOverRide_Click(object sender, EventArgs e)
+        {
+            string status = radbtnApprove.Checked == true ? "Approved" : radbtnDeny.Checked == true ? "Denied" : radbtnPending.Checked == true ? "Pending" : "Removed";
+            string qur = dbLibrary.idBuildQuery("[proc_overrideCertStatus]", Request.QueryString["VId"], status, txtOverrideReason.Text, status == "Approved" ? DateTime.Now.AddYears(1).ToString() : "", Session["UserId"].ToString());
+            dbLibrary.idExecute(qur);
+            Response.Redirect("vmpUsrStatus.aspx?VId=" + Request.QueryString["VId"]);
+        }
+    }
+}

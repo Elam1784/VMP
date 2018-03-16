@@ -1,0 +1,477 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Text;
+using System.Web;
+
+namespace VMP.Library
+{
+    public class dbLibrary
+    {
+        public static string conStr = ConfigurationManager.ConnectionStrings["vmpconStr"].ToString();
+        public static string conStrStage = ConfigurationManager.ConnectionStrings["vmpconStrStage"].ToString();
+
+        public static DataSet idGetCustomResult(string qry)
+        {
+            DataSet ds = new DataSet();
+            SqlConnection conn1 = new SqlConnection(dbLibrary.conStr);
+            SqlDataAdapter dataadapter1 = new SqlDataAdapter(qry, conn1);
+            try
+            {
+                conn1.Open();
+                dataadapter1.Fill(ds);
+                return ds;
+
+            }
+            catch
+            {
+                throw;
+                // ds = null;
+                //return ds;
+            }
+            finally
+            {
+                conn1.Close();
+            }
+        }
+
+        public static DataSet idGetCustomResultPortal(string qry)
+        {
+            DataSet ds = new DataSet();
+            SqlConnection conn1 = new SqlConnection(dbLibrary.conStrStage);
+            SqlDataAdapter dataadapter1 = new SqlDataAdapter(qry, conn1);
+            try
+            {
+                conn1.Open();
+                dataadapter1.Fill(ds);
+                return ds;
+
+            }
+            catch
+            {
+                throw;
+                // ds = null;
+                //return ds;
+            }
+            finally
+            {
+                conn1.Close();
+            }
+        }
+
+        public static void idInsertDataTable(string procedureName, string paramName, DataTable dt)
+        {
+
+            SqlConnection conn = new SqlConnection(dbLibrary.conStr);
+            SqlCommand cmd = new SqlCommand(procedureName, conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            SqlParameter dtparam = cmd.Parameters.AddWithValue(paramName, dt);
+            dtparam.SqlDbType = SqlDbType.Structured;
+            try
+            {
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+        public static DataSet idGetReportForTable(string procedureName, DataTable dt, string arrayName, params string[] paramStr)
+        {
+            var ds = new DataSet();
+            SqlConnection conn = new SqlConnection(dbLibrary.conStr);
+            SqlCommand command = new SqlCommand(procedureName, conn);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@FromDate", SqlDbType.Date).Value = Convert.ToDateTime(paramStr[0]);
+            command.Parameters.Add("@ToDate", SqlDbType.Date).Value = Convert.ToDateTime(paramStr[1]);
+            if (paramStr.Length > 2)
+            {
+                command.Parameters.Add("@status", SqlDbType.VarChar).Value = paramStr[2];
+            }
+            if (paramStr.Length > 3)
+            {
+                command.Parameters.Add("@isAsian", SqlDbType.Bit).Value = paramStr[3];
+                command.Parameters.Add("@isBlack", SqlDbType.Bit).Value = paramStr[4];
+                command.Parameters.Add("@isHispanic", SqlDbType.Bit).Value = paramStr[5];
+                command.Parameters.Add("@IA", SqlDbType.Bit).Value = paramStr[6];
+                command.Parameters.Add("@PD", SqlDbType.Bit).Value = paramStr[7];
+                command.Parameters.Add("@isWoman", SqlDbType.Bit).Value = paramStr[7];
+                command.Parameters.Add("@Veteran", SqlDbType.Bit).Value = paramStr[8];
+                command.Parameters.Add("@SDVeteran", SqlDbType.Bit).Value = paramStr[8];
+            }
+            command.Parameters.Add(arrayName, SqlDbType.Structured).Value = dt;
+            try
+            {
+                conn.Open();
+                var adapter = new SqlDataAdapter(command);
+                adapter.Fill(ds);
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            finally
+            {
+                conn.Close();
+
+            }
+            return ds;
+        }
+        public static DataSet idGetReportForTwoTable(string procedureName, DataTable dt1, string arrayName1, DataTable dt2, string arrayName2, params string[] paramStr)
+        {
+            var ds = new DataSet();
+            SqlConnection conn = new SqlConnection(dbLibrary.conStr);
+            SqlCommand command = new SqlCommand(procedureName, conn);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@FromDate", SqlDbType.Date).Value = Convert.ToDateTime(paramStr[0]);
+            command.Parameters.Add("@ToDate", SqlDbType.Date).Value = Convert.ToDateTime(paramStr[1]);
+            command.Parameters.Add(arrayName1, SqlDbType.Structured).Value = dt1;
+            command.Parameters.Add(arrayName2, SqlDbType.Structured).Value = dt2;
+            try
+            {
+                conn.Open();
+                var adapter = new SqlDataAdapter(command);
+                adapter.Fill(ds);
+
+            }
+            catch (Exception ex)
+            {
+                // ds = null;
+                throw;
+            }
+            finally
+            {
+                conn.Close();
+
+            }
+            return ds;
+        }
+
+
+        public static string idGetAFieldByQuery(string qur)
+        {
+            string retStr = "";
+
+            DataSet ds = new DataSet();
+            SqlConnection conn = new SqlConnection(dbLibrary.conStr);
+            SqlDataAdapter dataadapter1 = new SqlDataAdapter(qur, conn);
+            try
+            {
+                conn.Open();
+                dataadapter1.Fill(ds);
+                conn.Close();
+                if (ds.Tables[0] != null && ds.Tables[0].Rows.Count > 0)
+                {
+                    retStr = ds.Tables[0].Rows[0][0].ToString();
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return retStr.Trim();
+        }
+
+        public static bool idHasRows(string qur)
+        {
+            bool retBool = false;
+
+            SqlConnection conn = new SqlConnection(dbLibrary.conStr);
+            SqlCommand command = new SqlCommand(qur, conn);
+            try
+            {
+                conn.Open();
+                SqlDataReader reader;
+                reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    retBool = true;
+                }
+                conn.Close();
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return retBool;
+
+        }
+        public static void idExecute(string qur)
+        {
+
+            SqlConnection conn = new SqlConnection(conStr);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            try
+            {
+                conn.Open();
+                cmd.CommandText = qur;
+                cmd.ExecuteNonQuery();
+                conn.Close();
+            }
+            catch (Exception e)
+            {
+                if (!qur.Contains("sp_ErrorLog"))
+                {
+                    throw e;
+                }
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+
+        public static void idExecutePortal(string qur)
+        {
+
+            SqlConnection conn = new SqlConnection(conStrStage);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            try
+            {
+                conn.Open();
+                cmd.CommandText = qur;
+                cmd.ExecuteNonQuery();
+                conn.Close();
+            }
+            catch (Exception e)
+            {
+                if (!qur.Contains("sp_ErrorLog"))
+                {
+                    throw e;
+                }
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+
+        public static void idInsertInto(string TableName, params string[] paramStr)
+        {
+            SqlConnection conn = new SqlConnection(dbLibrary.conStr);
+            try
+            {
+                string qur = "insert into " + TableName + "(";
+                for (int i = 0; i < paramStr.Length; i = i + 2)
+                {
+                    if (paramStr[i] == ":nc:" || paramStr[i] == ":null:")
+                        i++;
+                    qur += "" + paramStr[i] + ",";
+                }
+                qur = qur.Trim(',');
+                qur += ") values (";
+                for (int i = 0; i < paramStr.Length; i = i + 2)
+                {
+                    if (paramStr[i] == ":nc:")
+                    {
+                        i++;
+                        qur += paramStr[i + 1] + ",";
+                    }
+                    else if (paramStr[i] == ":null:")
+                    {
+                        i++;
+                        qur += "null,";
+                    }
+                    else if (paramStr[i + 1] == ":null:")
+                        qur += "NULL,";
+                    else
+                    {
+                        qur += "'" + paramStr[i + 1].Replace('\'', '`') + "',";
+                    }
+                }
+                qur = qur.Trim(',');
+                qur += ")";
+                conn.Open();
+                SqlCommand command = new SqlCommand(qur, conn);
+                command.ExecuteNonQuery();
+                conn.Close();
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+
+        public static void idUpdateTable(string TableName, string Condition, params string[] paramStr)
+        {
+
+            SqlConnection conn = new SqlConnection(dbLibrary.conStr);
+            try
+            {
+                string qur = "update " + TableName + " set ";
+                for (int i = 0; i < paramStr.Length; i = i + 2)
+                {
+                    if (paramStr[i] == ":nc:")
+                    {
+                        i++;
+                        qur += "" + paramStr[i] + "=" + paramStr[i + 1] + ",";
+                    }
+                    else if (paramStr[i] == ":null:")
+                    {
+                        i++;
+                        if (paramStr[i + 1] == null)
+                            qur += "" + paramStr[i] + "=null,";
+                        else
+                            qur += "" + paramStr[i] + "='" + paramStr[i + 1] + "',";
+                    }
+                    else if (paramStr[i + 1] == ":null:")
+                        qur += "" + paramStr[i] + "=NULL,";
+                    else
+                        qur += "" + paramStr[i] + "='" + paramStr[i + 1].Replace('\'', '`') + "',";
+                }
+                qur = qur.Trim(',');
+                qur += " Where " + Condition;
+                conn.Open();
+
+                SqlCommand command = new SqlCommand(qur, conn);
+                command.ExecuteNonQuery();
+
+                conn.Close();
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+
+        public static void idUpdateTableStage(string TableName, string Condition, params string[] paramStr)
+        {
+
+            SqlConnection conn = new SqlConnection(dbLibrary.conStrStage);
+            try
+            {
+                string qur = "update " + TableName + " set ";
+                for (int i = 0; i < paramStr.Length; i = i + 2)
+                {
+                    if (paramStr[i] == ":nc:")
+                    {
+                        i++;
+                        qur += "" + paramStr[i] + "=" + paramStr[i + 1] + ",";
+                    }
+                    else if (paramStr[i] == ":null:")
+                    {
+                        i++;
+                        if (paramStr[i + 1] == null)
+                            qur += "" + paramStr[i] + "=null,";
+                        else
+                            qur += "" + paramStr[i] + "='" + paramStr[i + 1] + "',";
+                    }
+                    else if (paramStr[i + 1] == ":null:")
+                        qur += "" + paramStr[i] + "=NULL,";
+                    else
+                        qur += "" + paramStr[i] + "='" + paramStr[i + 1].Replace('\'', '`') + "',";
+                }
+                qur = qur.Trim(',');
+                qur += " Where " + Condition;
+                conn.Open();
+
+                SqlCommand command = new SqlCommand(qur, conn);
+                command.ExecuteNonQuery();
+
+                conn.Close();
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+        public static bool idSendEmail(string SmtpClient, string FromId, string FromIdPassWord, string ToId, string subject, string DisplayName, string Body)
+        {
+            MailMessage mail = new MailMessage();
+            NetworkCredential cred = new NetworkCredential(FromId, FromIdPassWord);
+            mail.To.Add(ToId);
+            mail.Subject = subject;
+            mail.From = new MailAddress(FromId, DisplayName);
+            mail.IsBodyHtml = true;
+            mail.Body = Body;
+            SmtpClient smtp = new SmtpClient(SmtpClient);
+            smtp.UseDefaultCredentials = false;
+            smtp.EnableSsl = true;
+            smtp.Credentials = cred;
+            try
+            {
+                smtp.Send(mail);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static SqlDataReader idReturnReader(string qur)
+        {
+            SqlConnection conn = new SqlConnection(dbLibrary.conStr);
+            SqlCommand command = new SqlCommand(qur, conn);
+            conn.Open();
+            SqlDataReader reader;
+            reader = command.ExecuteReader();
+            return reader;
+        }
+
+
+        public static string idBuildQuery(string ProcedureName, params string[] paramStr)
+        {
+            StringBuilder qur = new StringBuilder();
+            qur.Append("Exec ");
+            qur.Append(ProcedureName);
+            qur.Append(" ");
+            for (int i = 0; i <= paramStr.Length - 1; i++)
+            {
+                string prmstr = paramStr[i];
+                if (prmstr.Contains("'"))
+                {
+                    prmstr = prmstr.Replace("'", "''");
+                }
+                qur.Append("'");
+                qur.Append(prmstr);
+                qur.Append("'");
+                if (i != paramStr.Length - 1)
+                    qur.Append(",");
+            }
+            return qur.ToString();
+        }
+
+        public static bool isValidVendor(string vendorId)
+        {
+            string qur = "select vendorId from VendorDetails where vendorId='" + vendorId.Trim() + "'";
+            if (idHasRows(qur))
+                return true;
+            else
+                return false;
+        }
+    }
+}

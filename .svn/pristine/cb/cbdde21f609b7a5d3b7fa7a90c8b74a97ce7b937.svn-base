@@ -1,0 +1,161 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using VMP.Library;
+
+namespace VMP_1._0.Library
+{
+    public class ruleLibrary
+    {
+        public static void executeRule(string VendorID)
+        {
+            DataSet ds = getRules(getApplicationType(VendorID));
+            if (ds != null)
+            {
+                executeRuleSet(ds, VendorID);
+            }
+        }
+
+        private static void executeRuleSet(DataSet ds, string vendorID)
+        {
+            foreach (DataRow dr in ds.Tables[0].Rows)
+            {
+                string value = string.Empty;
+                string qur = buildQuery(dr["columnName"].ToString(), dr["tableName"].ToString(), vendorID);
+                DataSet dsSuppliedValue = dbLibrary.idGetCustomResult(qur);
+                if (dsSuppliedValue.Tables[0].Rows.Count > 0)
+                {
+                    value = dsSuppliedValue.Tables[0].Rows[0]["value"].ToString();
+                }
+                string qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, value == dr["value"].ToString() ? "Approve" : dr["status"].ToString(), dr["description"].ToString(), value);
+                dbLibrary.idExecute(qry);
+            }
+
+            DataTable dtCombinedRule = ds.Tables[1];
+            foreach (DataRow dr in ds.Tables[1].Rows)
+            {
+                var results = from DataRow myRow in dtCombinedRule.Rows
+                              where (int)myRow["combinedRuleID"] == int.Parse(dr["combinedRuleID"].ToString())
+                              select myRow;
+                DataSet dsRuleList = (DataSet)results;
+                int previousRuleOrder = 0;
+                bool result = false;
+                foreach (DataRow drRule in dsRuleList.Tables[0].Rows)
+                {
+                    // Define a new dataset and add columns as RuleId, order, isAnd, Result of that rule(True or False)
+
+                    //if (previousRuleOrder == 0)
+                    //{
+                    //    previousRuleOrder = int.Parse(drRule["order"].ToString());
+
+                    //    string value = string.Empty;
+                    //    string qur = buildQuery(drRule["columnName"].ToString(), drRule["tableName"].ToString(), vendorID);
+                    //    DataSet dsSuppliedValue = dbLibrary.idGetCustomResult(qur);
+                    //    if (dsSuppliedValue.Tables[0].Rows.Count > 0)
+                    //    {
+                    //        value = dsSuppliedValue.Tables[0].Rows[0]["value"].ToString();
+                    //    }
+                    //    if (string.IsNullOrEmpty(value))
+                    //    {
+                    //        if (value == drRule["value"].ToString())
+                    //        {
+                    //            result = true;
+                    //        }
+                    //    }
+                    //}
+                    //else if (previousRuleOrder == int.Parse(drRule["order"].ToString()))
+                    //{
+                    //    //When order is 1,1,1... execute all the rules of that combined rule
+                    //    string value = string.Empty;
+                    //    string qur = buildQuery(drRule["columnName"].ToString(), drRule["tableName"].ToString(), vendorID);
+                    //    DataSet dsSuppliedValue = dbLibrary.idGetCustomResult(qur);
+                    //    if (dsSuppliedValue.Tables[0].Rows.Count > 0)
+                    //    {
+                    //        value = dsSuppliedValue.Tables[0].Rows[0]["value"].ToString();
+                    //    }
+                    //    if(string.IsNullOrEmpty(value))
+                    //    {
+                    //        if(value== drRule["value"].ToString())
+                    //        {
+                    //            result = true;
+                    //        }
+                    //    }
+
+                    //}
+                    //else if (previousRuleOrder != int.Parse(drRule["order"].ToString()))
+                    //{
+                    //    //When order is 1,2,3... and if first condition fails we dont  have to see the second rule
+
+                    //    break;
+                    //}
+
+
+                }
+
+            }
+        }
+
+        private static string buildQuery(string columnName, string tableName, string vendorID)
+        {
+            //string qur = string.Empty;
+
+            string qur = "Select " + columnName + " as value from " + tableName + " where vendorId='" + vendorID + "'";
+            if (tableName == "Owners")
+            {
+                qur += " and isPrimaryOwner=1";
+            }
+            return qur;
+        }
+
+        private static DataSet getRules(string AppType)
+        {
+            if (!string.IsNullOrEmpty(AppType))
+            {
+                string[] apptypes = null;
+                if (AppType.Contains(","))
+                {
+                    apptypes = AppType.Split(',');
+                }
+                else
+                {
+                    apptypes[0] = AppType;
+                }
+                string qur = dbLibrary.idBuildQuery("[proc_getRuleList]", apptypes[0]);
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                return ds;
+            }
+            else
+                return null;
+        }
+
+        private static string getApplicationType(string vendorID)
+        {
+            string qur = dbLibrary.idBuildQuery("[proc_getAppType]", vendorID);
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            string AppType = string.Empty;
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                if (bool.Parse(ds.Tables[0].Rows[0]["black"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["hispanic"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["asian"].ToString()) ||
+                    bool.Parse(ds.Tables[0].Rows[0]["indiginessAmerican"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["woman"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["physicallyDisabled"].ToString()))
+                {
+                    AppType = "TargetGroup,";
+                }
+                if (bool.Parse(ds.Tables[0].Rows[0]["veteran"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["serviceDisabled"].ToString()))
+                {
+                    AppType += "Veteran,";
+                }
+            }
+            if (ds.Tables[1].Rows.Count > 0)
+            {
+                if (ds.Tables[1].Rows[0]["classificationId"] != null)
+                {
+                    AppType += "EDR,";
+                }
+            }
+            AppType = AppType.TrimEnd(',');
+            return AppType;
+        }
+    }
+}

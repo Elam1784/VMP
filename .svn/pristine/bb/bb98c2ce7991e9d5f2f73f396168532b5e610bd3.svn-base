@@ -1,0 +1,118 @@
+﻿using Microsoft.Office.Interop.Word;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+using VMP_1._0.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrStatus : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if(!IsPostBack)
+            {
+                string appTypes = ruleLibrary.executeRule(Request.QueryString["VId"], Session["UserId"].ToString());
+                lblStatus.Text = getStatus(Request.QueryString["VId"]);
+                if (lblStatus.Text == "Approved")
+                {
+                    lblStatus.Attributes.Add("style", "color:green");
+                }
+                else
+                {
+                    if(appTypes != string.Empty)
+                    {
+                        if (appTypes.Contains(","))
+                        {
+                            lblAppType.Text = "Vendor might be eligible under other application type(s) - " + appTypes.Substring(appTypes.IndexOf(',') + 1);
+                            divOtherAppType.Attributes.Add("style", "display:block;text-align:center");
+                        }
+                    }
+                    else
+                    {
+                        lblStatus.Text = "Denied";
+                        lblAppType.Text = "Vendor is not applicable for any of the application types";
+                        divOtherAppType.Attributes.Add("style", "display:block;text-align:center");
+                    }
+                    lblStatus.Attributes.Add("style", "color:red");
+                }
+            }
+        }
+        private string getStatus(string vendorID)
+        {
+            string qur = "select TOP 1 status from VendorCertStatus where vendorId='" + vendorID + "' ORDER BY certLogID DESC ";
+            vendorID = dbLibrary.idGetAFieldByQuery(qur);
+            return vendorID;
+        }
+        protected void btnRecommend_Click(object sender, EventArgs e)
+        {
+            txtOverrideReason.Text = "";
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+        }
+
+        protected void btnLoad_Click(object sender, EventArgs e)
+        {
+            if(ddlLetters.SelectedIndex!=0)
+            {
+                divError.Attributes.Add("style", "display:none");
+                divEditor.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Select Any Letter to Load";
+                return;
+            }
+            string path = "C:\\File\\ADDL INFO.docx";
+            string target = "C:\\File\\Output\\sample.html";
+            object sourcepath = path;
+            object TargetPath = target;
+            Application newApp = new Application();
+            Documents d = newApp.Documents;
+            object Unknown = Type.Missing;
+            Document od = d.Open(ref sourcepath, ref Unknown,
+                                     ref Unknown, ref Unknown, ref Unknown,
+                                     ref Unknown, ref Unknown, ref Unknown,
+                                     ref Unknown, ref Unknown, ref Unknown,
+                                     ref Unknown, ref Unknown, ref Unknown, ref Unknown);
+            object format = WdSaveFormat.wdFormatHTML;
+
+
+
+            newApp.ActiveDocument.SaveAs(ref TargetPath, ref format,
+                        ref Unknown, ref Unknown, ref Unknown,
+                        ref Unknown, ref Unknown, ref Unknown,
+                        ref Unknown, ref Unknown, ref Unknown,
+                        ref Unknown, ref Unknown, ref Unknown,
+                        ref Unknown, ref Unknown);
+
+            newApp.Documents.Close(WdSaveOptions.wdDoNotSaveChanges);
+
+            //string txt = File.ReadAllText(Server.MapPath("C:\\File\\Output\\sample.html"));
+            //txtEditor.Text = txt;
+
+            //  txtEditor.Text = data.ToString();
+
+
+            using (System.IO.StreamReader sr = new System.IO.StreamReader("C:\\File\\Output\\sample.html"))
+            {
+                txtEditor.Text = sr.ReadToEnd();
+            }
+        }
+
+        protected void lnkRules_Click(object sender, EventArgs e)
+        {
+            string qur = "select description, status from   VendorRulesResult where vendorId=" + Request.QueryString["VId"];
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            grdRulesView.DataSource = ds;
+            grdRulesView.DataBind();
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModalRulesView();", true);
+        }
+    }
+}

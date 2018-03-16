@@ -1,0 +1,49 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/vmpUsrMaster.Master" AutoEventWireup="true" CodeBehind="manageVendor.aspx.cs" Inherits="VMP_1._0.User.manageVendor" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <style>
+        label {
+            font-weight: normal;
+        }
+    </style>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
+    <div class="container" style="background-color: gainsboro; border-radius: 6px;">
+        <div class="row" style="text-align: center">
+            <h3>Manage Vendor</h3>
+        </div>
+        <br />
+        <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+            <ContentTemplate>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-2">
+                            <h5 style="margin-top: 5px !important;"><b>Search By</b></h5>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:RadioButton ID="radSearchVN" runat="server" Text="Vendor Name" GroupName="s" Checked="true" OnCheckedChanged="radSearchVN_CheckedChanged" AutoPostBack="true" /></div>
+                        <div class="col-md-3">
+                            <asp:RadioButton ID="radSearchSpecialist" runat="server" Text="Specialist" GroupName="s" OnCheckedChanged="radSearchSpecialist_CheckedChanged" AutoPostBack="true" /></div>
+                        <div class="col-md-3">
+                            <asp:RadioButton ID="radOption3" runat="server" Text="Option 3" GroupName="s" /></div>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-4" id="divSearchV" runat="server">
+                        <asp:TextBox ID="txtSearch" runat="server" CssClass="form-control" placeholder="Vendor Name"></asp:TextBox></div>
+                    <div class="col-md-4" id="divSearchS" runat="server" style="display: none;">
+                        <asp:DropDownList ID="ddlSpecialist" runat="server" CssClass="form-control"></asp:DropDownList></div>
+                    <div class="col-md-3">
+                        <asp:Button ID="btnSearch" runat="server" CssClass="btn btn-primary" Text="Search" /></div>
+                    <div class="col-md-2"></div>
+                </div>
+            </ContentTemplate>
+        </asp:UpdatePanel>
+        <br />
+        <br />
+    </div>
+</asp:Content>

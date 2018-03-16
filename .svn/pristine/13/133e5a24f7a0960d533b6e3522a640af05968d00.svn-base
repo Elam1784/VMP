@@ -1,0 +1,485 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using VMP.Library;
+
+namespace VMP_1._0.Library
+{
+    public class ruleLibrary
+    {
+        public static void executeRule(string VendorID, string UserID)
+        {
+            DataSet ds = getRules(getApplicationType(VendorID));
+            if (ds != null)
+            {
+                executeRuleSet(ds, VendorID, UserID);
+            }
+        }
+
+        private static void executeRuleSet(DataSet ds, string vendorID,string userID)
+        {
+            string qurDelete = "Delete from VendorRulesResult where vendorID=" + vendorID;
+            dbLibrary.idExecute(qurDelete);
+            bool isDeny = false;
+            bool isPending = false;
+            //Single Rules Execution
+            foreach (DataRow dr in ds.Tables[0].Rows)
+            {
+                if(dr["isHardcodedRule"].ToString() == "False")
+                {
+                    string value = string.Empty;
+                    string qur = buildQuery(dr["columnName"].ToString(), dr["tableName"].ToString(), vendorID);
+                    DataSet dsSuppliedValue = dbLibrary.idGetCustomResult(qur);
+                    if (dsSuppliedValue.Tables[0].Rows.Count > 0)
+                    {
+                        value = dsSuppliedValue.Tables[0].Rows[0]["value"].ToString();
+                    }
+                    string status = string.Empty;
+                    if (dr["condition"].ToString() == "=")
+                    {
+                        status = (value == dr["value"].ToString() ? "Approve" : dr["status"].ToString());
+                    }
+                    else if (dr["condition"].ToString() == "!=")
+                    {
+                        status = (value != dr["value"].ToString() ? "Approve" : dr["status"].ToString());
+                    }
+                    else if (dr["condition"].ToString() == ">")
+                    {
+                        status = (decimal.Parse(value) > decimal.Parse(dr["value"].ToString()) ? "Approve" : dr["status"].ToString());
+                    }
+                    else if (dr["condition"].ToString() == "<")
+                    {
+                        status = (decimal.Parse(value) < decimal.Parse(dr["value"].ToString()) ? "Approve" : dr["status"].ToString());
+                    }
+                    else if (dr["condition"].ToString() == "<=")
+                    {
+                        status = (decimal.Parse(value) <= decimal.Parse(dr["value"].ToString()) ? "Approve" : dr["status"].ToString());
+                    }
+                    else if (dr["condition"].ToString() == ">=")
+                    {
+                        status = (decimal.Parse(value) >= decimal.Parse(dr["value"].ToString()) ? "Approve" : dr["status"].ToString());
+                    }
+                    if (status == "Deny")
+                    {
+                        isDeny = true;
+                    }
+                    else if (status == "Pending")
+                    {
+                        isPending = true;
+                    }
+                    string qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, status, dr["description"].ToString(), value);
+                    dbLibrary.idExecute(qry);
+                }
+                else
+                {
+                    bool noOfsharesOwnPercen = true;
+                    bool hasCompleteOwnersPercentage = true;
+                    string qry = string.Empty;
+                    string qur = dbLibrary.idBuildQuery("[proc_getDataForHardRule]", vendorID);
+                    DataSet dsHardRule = dbLibrary.idGetCustomResult(qur);
+                    switch (dr["hardRuleId"].ToString())
+                    {
+                        case "1":
+                            hasCompleteOwnersPercentage = checkOwnersPercentage(vendorID);
+                            qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, hasCompleteOwnersPercentage ? "Approve" : dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                            dbLibrary.idExecute(qry);
+                            break;
+                        case "2":
+                            noOfsharesOwnPercen = calculateShares(vendorID);
+                            qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, noOfsharesOwnPercen ? "Approve" : dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                            dbLibrary.idExecute(qry);
+                            break;
+                        case "3":
+                            if (dsHardRule.Tables[1].Rows.Count > 0 && dsHardRule.Tables[3].Rows.Count > 0)
+                            {
+                                if (dsHardRule.Tables[3].Rows[0]["corporation"].ToString() == "True")
+                                {
+                                    if (dsHardRule.Tables[1].Rows[0]["isCEO"].ToString() == "True" || dsHardRule.Tables[1].Rows[0]["isPresident"].ToString() == "True")
+                                    {
+                                        qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, "Approve", dr["description"].ToString(), string.Empty);
+                                        dbLibrary.idExecute(qry);
+                                    }
+                                    else
+                                    {
+                                        qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                                        dbLibrary.idExecute(qry);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                                dbLibrary.idExecute(qry);
+                            }
+                            break;
+                        case "4":
+                            if (dsHardRule.Tables[1].Rows.Count > 0)
+                            {
+                                if (dsHardRule.Tables[1].Rows[0]["busPlanning"].ToString() == "True" || dsHardRule.Tables[1].Rows[0]["salesMarket"].ToString() == "True" || dsHardRule.Tables[1].Rows[0]["financial"].ToString() == "True" || dsHardRule.Tables[1].Rows[0]["personnel"].ToString() == "True" || dsHardRule.Tables[1].Rows[0]["projManagement"].ToString() == "True")
+                                {
+                                    qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, "Approve", dr["description"].ToString(), string.Empty);
+                                    dbLibrary.idExecute(qry);
+                                }
+                                else
+                                {
+                                    qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                                    dbLibrary.idExecute(qry);
+                                }
+                            }
+                            else
+                            {
+                                qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                                dbLibrary.idExecute(qry);
+                            }
+                            break;
+                        case "5":
+
+                            if (dsHardRule.Tables[4].Rows.Count > 0)
+                            {
+                                bool hasGreaterOtherOwnerExp = false;
+                                int count = 0;
+                                foreach (DataRow drhardRuleData in dsHardRule.Tables[4].Rows)
+                                {
+                                    if (dsHardRule.Tables[1].Rows[0]["ownerID"].ToString() != dsHardRule.Tables[4].Rows[count]["ownerID"].ToString())
+                                    {
+                                        if (int.Parse(dsHardRule.Tables[1].Rows[0]["expCode"].ToString()) < int.Parse(dsHardRule.Tables[4].Rows[count]["expCode"].ToString()))
+                                        {
+                                            hasGreaterOtherOwnerExp = true;
+                                        }
+                                    }
+                                    count++;
+                                }
+                                qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, hasGreaterOtherOwnerExp ? dr["status"].ToString() : "Approve", dr["description"].ToString(), string.Empty);
+                                dbLibrary.idExecute(qry);
+                            }
+                            else
+                            {
+                                qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                                dbLibrary.idExecute(qry);
+                            }
+                            break;
+                        case "6":
+                            if (dsHardRule.Tables[2].Rows.Count > 0)
+                            {
+                                int count = 0;
+                                foreach (DataRow drhardRuleData in dsHardRule.Tables[2].Rows)
+                                {
+                                    if (dsHardRule.Tables[2].Rows[count]["similarBusiness"].ToString() == "True")
+                                    {
+                                        if(dsHardRule.Tables[5].Rows.Count > 0)
+                                        {
+                                            Decimal limit = decimal.Parse(dsHardRule.Tables[5].Rows[0]["smallBusinessLimit"].ToString()) * 1000000;
+
+                                            if (limit >= Decimal.Parse(dsHardRule.Tables[2].Rows[0]["grossRevenue"].ToString()))
+                                            {
+                                                qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, "Approve", dr["description"].ToString(), string.Empty);
+                                                dbLibrary.idExecute(qry);
+                                            }
+                                            else
+                                            {
+                                                qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                                                dbLibrary.idExecute(qry);
+                                            }
+                                        }
+                                    }
+                                    count++;
+                                }
+                            }
+                            break;
+                        case "7":
+                            if (dsHardRule.Tables[6].Rows.Count > 0)
+                            {
+                                int count = 0;
+                                bool hasMoreThan20Percentage = false;
+                                foreach (DataRow drhardRuleData in dsHardRule.Tables[6].Rows)
+                                {
+                                    if (decimal.Parse(dsHardRule.Tables[6].Rows[count]["ownershipPercentage"].ToString()) > 20)
+                                    {
+                                        hasMoreThan20Percentage = true;
+                                        break;
+                                    }
+                                    count++;
+                                }
+                                if(hasMoreThan20Percentage)
+                                {
+                                    qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                                    dbLibrary.idExecute(qry);
+                                }
+                                else
+                                {
+                                    qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, "Approve", dr["description"].ToString(), string.Empty);
+                                    dbLibrary.idExecute(qry);
+                                }
+                            }
+                            break;
+                        case "8":
+                            if (dsHardRule.Tables[7].Rows.Count > 0)
+                            {
+                                if(decimal.Parse(dsHardRule.Tables[7].Rows[0]["grossRevenue"].ToString()) > decimal.Parse(dsHardRule.Tables[5].Rows[0]["smallBusinessLimit"].ToString()) * 1000000)
+                                {
+                                    qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, dr["status"].ToString(), dr["description"].ToString(), string.Empty);
+                                    dbLibrary.idExecute(qry);
+                                }
+                                else
+                                {
+                                    qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, dr["ruleID"].ToString(), string.Empty, "Approve", dr["description"].ToString(), string.Empty);
+                                    dbLibrary.idExecute(qry);
+                                }
+                            }
+                            break;
+                    }
+                    
+                }
+            }
+
+            //Combined Rules Execution
+            DataTable dtCombinedRule = ds.Tables[1];
+            foreach (DataRow dr in ds.Tables[2].Rows)
+            {
+                var results = from DataRow myRow in dtCombinedRule.Rows
+                              where (int)myRow["combinedRuleID"] == int.Parse(dr["combinedRuleID"].ToString())
+                              select myRow;
+
+                DataTable dt = results.CopyToDataTable();
+                DataSet dsRuleList = new DataSet();
+                dsRuleList.Tables.Add(dt);
+                                
+                DataSet dsRuleSet = new DataSet();
+                dsRuleSet.Tables.Add();
+                dsRuleSet.Tables[0].Columns.Add("RuleId", typeof(int));
+                dsRuleSet.Tables[0].Columns.Add("Order", typeof(int));
+                dsRuleSet.Tables[0].Columns.Add("Result", typeof(bool));
+                int count = 0;
+                foreach (DataRow drRule in dsRuleList.Tables[0].Rows)
+                {
+                    bool result = false;
+                    // Define a new dataset and add columns as RuleId, order, isAnd, Result of that rule(True or False)
+                    dsRuleSet.Tables[0].Rows.Add();
+                    dsRuleSet.Tables[0].Rows[count]["RuleId"] = drRule["RuleID"].ToString();
+                    dsRuleSet.Tables[0].Rows[count]["Order"] = drRule["order"].ToString();
+
+                    string value = string.Empty;
+                    string qur = buildQuery(drRule["columnName"].ToString(), drRule["tableName"].ToString(), vendorID);
+                    DataSet dsSuppliedValue = dbLibrary.idGetCustomResult(qur);
+
+                    if (dsSuppliedValue.Tables[0].Rows.Count > 0)
+                    {
+                        value = dsSuppliedValue.Tables[0].Rows[0]["value"].ToString();
+                    }
+
+                    if (drRule["condition"].ToString() == "=")
+                    {
+                        result = (value == drRule["value"].ToString() ? true : false);
+                    }
+                    else if (drRule["condition"].ToString() == "!=")
+                    {
+                        result = (value != drRule["value"].ToString() ? true : false);
+                    }
+                    else if (drRule["condition"].ToString() == ">")
+                    {
+                        result = (decimal.Parse(value) > decimal.Parse(drRule["value"].ToString()) ? true : false);
+                    }
+                    else if (drRule["condition"].ToString() == "<")
+                    {
+                        result = (decimal.Parse(value) < decimal.Parse(drRule["value"].ToString()) ? true : false);
+                    }
+                    else if (drRule["condition"].ToString() == "<=")
+                    {
+                        result = (decimal.Parse(value) <= decimal.Parse(drRule["value"].ToString()) ? true : false);
+                    }
+                    else if (drRule["condition"].ToString() == ">=")
+                    {
+                        result = (decimal.Parse(value) >= decimal.Parse(drRule["value"].ToString()) ? true : false);
+                    }
+                    dsRuleSet.Tables[0].Rows[count]["Result"] = result;
+                    count++;
+                }
+
+                int max = Convert.ToInt32(dsRuleSet.Tables[0].AsEnumerable()
+                        .Max(row => row["Order"]));
+                bool isAnd = bool.Parse(dsRuleList.Tables[0].Rows[0]["isAnd"].ToString());
+                bool isLast = false;
+                bool isCombinedResult=false;
+                foreach (DataRow row in dsRuleSet.Tables[0].Rows)
+                {
+                    isCombinedResult = false;
+                    if (int.Parse(row["order"].ToString()) == max)
+                    {
+                        //insert only when  it is a last rule
+                        isLast = true;
+                    }
+                    if (isAnd)
+                    {
+                        //And Condition
+                        if (!bool.Parse(row["Result"].ToString()))
+                        {
+                           break;
+                        }
+                        else
+                        {
+                            isCombinedResult = true;
+                        }
+                    }
+                    else
+                    {
+                        //Or Condition
+                        if (bool.Parse(row["Result"].ToString()))
+                        {
+                            isCombinedResult = true;
+                        }
+                    }
+                }
+                if (isLast)
+                {
+                    //Insert
+                    string status = string.Empty;
+                    if(isCombinedResult)
+                    {
+                        status = "Approve";
+                    }
+                    else
+                    {
+                        status = dsRuleList.Tables[0].Rows[0]["status"].ToString();
+                        if (status == "Deny")
+                        {
+                            isDeny = true;
+                        }
+                        else if (status == "Pending")
+                        {
+                            isPending = true;
+                        }
+                    }
+                    string qry = dbLibrary.idBuildQuery("[proc_insertRuleResult]", vendorID, string.Empty, dr["combinedRuleID"].ToString(), status, dsRuleList.Tables[0].Rows[0]["description"].ToString(), string.Empty);
+                    dbLibrary.idExecute(qry);
+                }
+            }
+            // Check for any deny or pending in the status in Vendor RulesResult table and insert the final result to the VendorcertStaus
+            string Finalstatus = isDeny == true ? "Denied" : isPending == true ? "Pending" : "Approved";
+
+            string finalQur = dbLibrary.idBuildQuery("[proc_UpdateCertStatus]", vendorID, Finalstatus, userID);
+            dbLibrary.idInsertInto("VendorCertStatus",
+                "vendorID", vendorID,
+                "status", Finalstatus);
+        }
+
+        private static bool calculateShares(string vendorID)
+        {
+            string qur = "select ownerID,ownershipPercentage,noSharesOwned from owners where isActive='1' and vendorid =" + vendorID;
+            DataSet dsOwnerPercentage = dbLibrary.idGetCustomResult(qur);
+            DataTable ownerTable;
+            ownerTable = dsOwnerPercentage.Tables[0];
+            object sumObject;
+            sumObject = ownerTable.Compute("Sum(ownershipPercentage)", "");
+            if (decimal.Parse(sumObject.ToString()) == 100M)
+            {
+                object totalNoOfShares;
+                totalNoOfShares = ownerTable.Compute("Sum(noSharesOwned)", "");
+                bool isRatioMatch = true;
+                if (decimal.Parse(totalNoOfShares.ToString()) > 0)
+                {
+                    foreach (DataRow dr in dsOwnerPercentage.Tables[0].Rows)
+                    {
+                        decimal sharesCoEfficient = Math.Round(decimal.Parse(totalNoOfShares.ToString()) / decimal.Parse(dr["noSharesOwned"].ToString()));
+                        decimal ownerPercenCoEfficient = Math.Round(100 / decimal.Parse(dr["ownershipPercentage"].ToString()));
+                        if (sharesCoEfficient != ownerPercenCoEfficient)
+                        {
+                            isRatioMatch = false;
+                            break;
+                        }
+                        else
+                            isRatioMatch = true;
+                    }
+                }
+                else
+                {
+                    isRatioMatch = false;
+                }
+                return isRatioMatch;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private static bool checkOwnersPercentage(string vendorID)
+        {
+            string qur = "select ownerID,ownershipPercentage,noSharesOwned from owners where isActive='1' and vendorid =" + vendorID;
+            DataSet dsOwnerPercentage = dbLibrary.idGetCustomResult(qur);
+            DataTable ownerTable;
+            ownerTable = dsOwnerPercentage.Tables[0];
+            object sumObject;
+            sumObject = ownerTable.Compute("Sum(ownershipPercentage)", "");
+            if (decimal.Parse(sumObject.ToString()) == 100M)
+            {
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private static string buildQuery(string columnName, string tableName, string vendorID)
+        {
+            string qur = "Select " + columnName + " as value from " + tableName + " where vendorId='" + vendorID + "'";
+            if (tableName == "Owners")
+            {
+                qur += " and isPrimaryOwner=1";
+            }
+            return qur;
+        }
+
+        private static DataSet getRules(string AppType)
+        {
+            if (!string.IsNullOrEmpty(AppType))
+            {
+                string[] apptypes = new string[3];
+                if (AppType.Contains(","))
+                {
+                    apptypes = AppType.Split(',');
+                }
+                else
+                {
+                    apptypes[0] = AppType;
+                }
+                string qur = dbLibrary.idBuildQuery("[proc_getRuleList]", apptypes[0]);
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                return ds;
+            }
+            else
+                return null;
+        }
+
+        private static string getApplicationType(string vendorID)
+        {
+            string qur = dbLibrary.idBuildQuery("[proc_getAppType]", vendorID);
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            string AppType = string.Empty;
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                if (bool.Parse(ds.Tables[0].Rows[0]["black"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["hispanic"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["asian"].ToString()) ||
+                    bool.Parse(ds.Tables[0].Rows[0]["indiginessAmerican"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["woman"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["physicallyDisabled"].ToString()))
+                {
+                    AppType = "TargetGroup,";
+                }
+                if (bool.Parse(ds.Tables[0].Rows[0]["veteran"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["serviceDisabled"].ToString()))
+                {
+                    AppType += "Veteran,";
+                }
+            }
+            if (ds.Tables[1].Rows.Count > 0)
+            {
+                if (ds.Tables[1].Rows[0]["classificationId"] != null)
+                {
+                    AppType += "EDR,";
+                }
+            }
+            AppType = AppType.TrimEnd(',');
+            return AppType;
+        }
+    }
+}

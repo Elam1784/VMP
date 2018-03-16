@@ -1,0 +1,76 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrHome : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                if (Request.UrlReferrer != null)
+                {
+                    string previousPageName = System.IO.Path.GetFileName(Request.UrlReferrer.AbsolutePath);
+                    if (previousPageName == "vmpUsrVendor4")
+                    {
+                        Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction", "showmessage()", true);
+                    }
+                }
+                // Get value from the database for statistics
+                string qur = dbLibrary.idBuildQuery("proc_getStatsData", Session["UserId"].ToString());
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+
+                if (ds.Tables[3].Rows.Count > 0)
+                {
+                    foreach (DataRow dr in ds.Tables[3].Rows)
+                    {
+                        if (dr["supplierClassification"].ToString() == "Construction")
+                        {
+                            hdnConstruction.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Goods")
+                        {
+                            hdnGoods.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Professional/Technical")
+                        {
+                            hdnPT.Value = dr["count"].ToString();
+                        }
+                        if (dr["supplierClassification"].ToString() == "Services")
+                        {
+                            hdnServices.Value = dr["count"].ToString();
+                        }
+                    }
+                }
+                if (ds.Tables[6].Rows.Count > 0)
+                {
+                    grdMonthStat.DataSource = ds.Tables[6];
+                    grdMonthStat.DataBind();
+                }
+                if (ds.Tables[4].Rows.Count > 0)
+                {
+                    lblAvgAll.Text = ds.Tables[4].Rows[0]["AvgDays"].ToString();
+                }
+                if(ds.Tables[5].Rows.Count>0)
+                {
+                    lblAvgSpecialist.Text= ds.Tables[5].Rows[0]["AvgDays"].ToString();
+                    //if (ds.Tables[4].Rows.Count > 0)
+                    //{
+                    //    lblSpecialistName.Text = ds.Tables[4].Rows[0]["SpecialistName"].ToString();
+                    //}
+                }
+            }
+        }
+    }
+}

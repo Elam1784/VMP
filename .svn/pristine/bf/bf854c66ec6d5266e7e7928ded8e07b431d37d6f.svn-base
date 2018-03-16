@@ -1,0 +1,74 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using VMP.Library;
+
+namespace VMP_1._0.Library
+{
+    public class ruleLibrary
+    {
+        public static string executeRule(string VendorID)
+        {
+            DataSet ds = getRules(getApplicationType(VendorID));
+            executeRuleSet(ds);
+            return VendorID;
+        }
+
+        private static void executeRuleSet(DataSet ds)
+        {
+            foreach (DataRow dr in ds.Tables[0].Rows)
+            {
+            }
+        }
+
+        private static DataSet getRules(string AppType)
+        {
+            if (!string.IsNullOrEmpty(AppType))
+            {
+                string[] apptypes = null;
+                if (AppType.Contains(","))
+                {
+                    apptypes = AppType.Split(',');
+                }
+                else
+                {
+                    apptypes[0] = AppType;
+                }
+                string qur = "";
+            }
+
+            DataSet ds = new DataSet();
+            return ds;
+        }
+
+        private static string getApplicationType(string vendorID)
+        {
+            string qur = dbLibrary.idBuildQuery("[proc_getAppType]", vendorID);
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            string AppType = string.Empty;
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                if (bool.Parse(ds.Tables[0].Rows[0]["black"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["hispanic"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["asian"].ToString()) ||
+                    bool.Parse(ds.Tables[0].Rows[0]["indiginessAmerican"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["woman"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["physicallyDisabled"].ToString()))
+                {
+                    AppType = "TargetGroup,";
+                }
+                if (bool.Parse(ds.Tables[0].Rows[0]["veteran"].ToString()) || bool.Parse(ds.Tables[0].Rows[0]["serviceDisabled"].ToString()))
+                {
+                    AppType += "Veteran,";
+                }
+            }
+            if (ds.Tables[1].Rows.Count > 0)
+            {
+                if (ds.Tables[1].Rows[0]["classificationId"] != null)
+                {
+                    AppType += "EDR,";
+                }
+            }
+            AppType = AppType.TrimEnd(',');
+            return AppType;
+        }
+    }
+}

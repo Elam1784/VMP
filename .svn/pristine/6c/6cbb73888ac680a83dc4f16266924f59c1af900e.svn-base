@@ -1,0 +1,135 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/vmpUsrMaster.Master" AutoEventWireup="true" CodeBehind="manageVendor.aspx.cs" Inherits="VMP_1._0.User.manageVendor" EnableEventValidation="false" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <style>
+        label {
+            font-weight: normal;
+        }
+
+        .grid td, .grid th {
+            text-align: center !important;
+        }
+    </style>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
+    <div class="container" style="background-color: gainsboro; border-radius: 6px;">
+        <div class="row" style="text-align: center">
+            <h3>Manage Vendor</h3>
+        </div>
+        <br />
+        <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+            <ContentTemplate>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-2">
+                            <h5 style="margin-top: 5px !important;"><b>Search By</b></h5>
+                        </div>
+                        <div class="col-md-3">
+                            <asp:RadioButton ID="radSearchVN" runat="server" Text="Vendor Name" GroupName="s" Checked="true" OnCheckedChanged="radSearchVN_CheckedChanged" AutoPostBack="true" />
+                        </div>
+                        <div class="col-md-3">
+                            <asp:RadioButton ID="radSearchSpecialist" runat="server" Text="Specialist" GroupName="s" OnCheckedChanged="radSearchSpecialist_CheckedChanged" AutoPostBack="true" />
+                        </div>
+                        <div class="col-md-3">
+                            <asp:RadioButton ID="radSearchLName" runat="server" Text="Primary Owner Lastname" GroupName="s" OnCheckedChanged="radSearchLName_CheckedChanged" AutoPostBack="true" />
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-3" id="divSearchV" runat="server">
+                        <div class="col-md-12">
+                            <asp:TextBox ID="txtSearch" runat="server" CssClass="form-control" placeholder="Vendor Name" Style="margin-bottom: 5px" ValidationGroup="g"></asp:TextBox>
+                        </div>
+                        <div class="col-md-12">
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ForeColor="Red" ErrorMessage="Field Cannot be Empty" ControlToValidate="txtSearch" ValidationGroup="g"></asp:RequiredFieldValidator>
+                        </div>
+                    </div>
+                    <div class="col-md-3" id="divSearchS" runat="server" style="display: none;">
+                        <asp:DropDownList ID="ddlSpecialist" runat="server" CssClass="form-control" Style="margin-bottom: 5px"></asp:DropDownList>
+                    </div>
+                    <div class="col-md-2">
+                        <asp:Button ID="btnSearch" runat="server" CssClass="btn btn-primary" Text="Search" OnClick="btnSearch_Click" ValidationGroup="g" />
+                    </div>
+                    <div class="col-md-2"></div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-8">
+                        <asp:GridView ID="grdSearchResult" runat="server" DataKeyNames="vendorId" CssClass="grid" AllowSorting="true" AllowPaging="true" PageSize="10" OnRowDataBound="grdSearchResult_RowDataBound" OnSelectedIndexChanged="grdSearchResult_SelectedIndexChanged" AutoGenerateColumns="false" HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-BorderColor="White" HeaderStyle-ForeColor="White" Style="width: 100%; text-align: center; margin-bottom: 10px;" BackColor="White" EmptyDataRowStyle-BorderColor="White" OnPageIndexChanging="grdSearchResult_PageIndexChanging">
+                            <Columns>
+                                <asp:BoundField DataField="vendorName" HeaderText="Vendor" HeaderStyle-HorizontalAlign="Center" />
+                                <asp:BoundField DataField="specialistName" HeaderText="Specialist" HeaderStyle-HorizontalAlign="Center" />
+                                <asp:BoundField DataField="primaryOwner" HeaderText="Primary Owner" HeaderStyle-HorizontalAlign="Center" />
+                            </Columns>
+                            <EmptyDataTemplate>
+                                <label style="color: red;">No Data Found</label>
+                            </EmptyDataTemplate>
+                        </asp:GridView>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="col-md-12" id="divButtons" runat="server" style="display: none; margin-top: 60px">
+                            <div class="col-md-12" style="text-align: center">
+                                <asp:Button ID="btnEdit" runat="server" Text="View/Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" Style="margin-bottom: 5px;" />
+                            </div>
+                            <div class="col-md-12" style="text-align: center">
+                                <asp:Button ID="btnLog" runat="server" Text="Log" CssClass="btn btn-primary" OnClick="btnLog_Click" />
+                                <div class="modal fade" id="myModal" role="dialog" data-backdrop="static" data-keyboard="false">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">Log</h4>
+                                                <h5 id="LogHeading" runat="server"></h5>
+                                            </div>
+                                            <asp:UpdatePanel ID="updpanel" runat="server">
+                                                <ContentTemplate>
+                                            <div class="modal-body">
+                                                <div style="height: 400px; overflow-y: scroll;"> 
+                                                        <asp:GridView ID="grdVLog" runat="server" CssClass="grid" AutoGenerateColumns="false"  HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-ForeColor="White" Style="width: 100%; text-align: center; margin-bottom: 10px;" EmptyDataRowStyle-BorderColor="White">
+                                                            <Columns>
+                                                                <asp:BoundField DataField="Specialist" HeaderText="Specialist" HeaderStyle-HorizontalAlign="Center" />
+                                                                <asp:BoundField DataField="activity" HeaderText="Activity" HeaderStyle-HorizontalAlign="Center" />
+                                                                <asp:BoundField DataField="actDateTime" HeaderText="Date Time" HeaderStyle-HorizontalAlign="Center" />
+                                                            </Columns>
+                                                            <EmptyDataTemplate>
+                                                                <label style="color: red;">No Data Found</label>
+                                                            </EmptyDataTemplate>
+                                                        </asp:GridView>
+                                                    </div>
+                                                        </div>
+                                                    </ContentTemplate>
+                                                </asp:UpdatePanel>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row"></div>
+
+
+            </ContentTemplate>
+        </asp:UpdatePanel>
+        <br />
+        <br />
+    </div>
+    <script src="../js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        function ShowPopup() {
+            //  alert("Hi");
+          //  $("#myModal").remove();
+            $('.modal-backdrop').hide();
+             $("#myModal").modal('show');
+        }
+    </script>
+</asp:Content>

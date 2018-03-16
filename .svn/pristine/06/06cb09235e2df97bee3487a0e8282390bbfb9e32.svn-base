@@ -1,0 +1,702 @@
+﻿//using Microsoft.Office.Interop.Word;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+using VMP_1._0.Library;
+using System.Net.Mail;
+using System.Web.Configuration;
+using System.Net.Mime;
+using DocumentFormat.OpenXml.Packaging;
+using OpenXmlPowerTools;
+using DocumentFormat.OpenXml;
+using System.Text.RegularExpressions;
+using DocumentFormat.OpenXml.Wordprocessing;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrStatus : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                string appTypes = ruleLibrary.getApplicationType(Request.QueryString["VId"]);
+                string qur = dbLibrary.idBuildQuery("proc_getStatusData", Request.QueryString["VId"]);
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                if (ds.Tables[0].Rows.Count > 0)
+                {
+                    lblVendorHeading.Text = ds.Tables[0].Rows[0]["vendorName"].ToString();
+                    lblStatus.Text = ds.Tables[0].Rows[0]["status"].ToString();
+                    lblDesignation.Text = ds.Tables[0].Rows[0]["finalClassification"].ToString();
+                }
+                if (ds.Tables[1].Rows.Count > 0)
+                {
+                    lblCategory.Text = ds.Tables[1].Rows[0]["supplierClassification"].ToString();
+                    lblCategory.Attributes.Add("style", "color:black;");
+                }
+                else
+                {
+                    lblCategory.Text = "Missing Primary NAICS Code";
+                    lblCategory.Attributes.Add("style", "color:red;");
+                }
+                if (appTypes != string.Empty)
+                {
+                    if (appTypes.Contains(","))
+                    {
+                        lblAppType.Text = "Vendor might be eligible under other application type(s) - " + appTypes.Substring(appTypes.IndexOf(',') + 1);
+                        divOtherAppType.Attributes.Add("style", "display:block;text-align:center");
+                        divAppType.Attributes.Add("style", "display:block");
+                        lblVendorAppType.Text = appTypes.Substring(0, appTypes.IndexOf(','));
+                    }
+                    else
+                    {
+                        divAppType.Attributes.Add("style", "display:block");
+                        lblVendorAppType.Text = appTypes;
+                    }
+                }
+                else
+                {
+                    lblStatus.Text = "Denied";
+                    lblAppType.Text = "Vendor is not applicable for any of the application types";
+                    divOtherAppType.Attributes.Add("style", "display:block;text-align:center");
+                    divAppType.Attributes.Add("style", "display:none");
+                    // radbtnDeny.Checked = true;
+                }
+                if (lblStatus.Text == "Approved")
+                {
+                    lblStatus.Attributes.Add("style", "color:green");
+                    // radbtnApprove.Checked = true;
+                }
+                else
+                {
+
+                    lblStatus.Attributes.Add("style", "color:red");
+                }
+                if (lblStatus.Text == "Approved")
+                {
+                    radbtnApprove.Checked = true;
+                }
+                else if (lblStatus.Text == "Denied")
+                {
+                    radbtnDeny.Checked = true;
+                }
+                else if (lblStatus.Text == "Pending")
+                {
+                    radbtnPending.Checked = true;
+                }
+                else if (lblStatus.Text == "Removed")
+                {
+                    radbtnRemove.Checked = true;
+                }
+            }
+        }
+        //private string getStatus(string vendorID)
+        //{
+        //    // string qur = "select TOP 1 status from VendorCertStatus where vendorId='" + vendorID + "' ORDER BY certLogID DESC ";
+        //    string qur = "SELECT VendorCertStatus.status,NAICCodes.supplierClassification, VendorDetails.finalClassification FROM  NAICCodes JOIN VendorDetails ON NAICCodes.naicId = VendorDetails.primaryNaicId join VendorCertStatus on VendorDetails.vendorId = VendorCertStatus.vendorID and VendorCertStatus.isRecent = '1' Where NAICCodes.supplierClassification is not NULL and VendorDetails.vendorId = '" + vendorID + "'";
+        //    vendorID = dbLibrary.idGetAFieldByQuery(qur);
+        //    return vendorID;
+        //}
+        protected void btnRecommend_Click(object sender, EventArgs e)
+        {
+            txtOverrideReason.Text = "";
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+        }
+
+        protected void btnLoad_Click(object sender, EventArgs e)
+        {
+            if (ddlLetters.SelectedIndex != 0)
+            {
+                divError.Attributes.Add("style", "display:none");
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Select Any Letter to Download";
+                return;
+            }
+            string qur = dbLibrary.idBuildQuery("[proc_getDataForLetter]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString(), ddlLetters.SelectedValue);
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                string vendorname = ds.Tables[0].Rows[0]["vendorName"].ToString().Replace('.', ' ').ToString().Replace(',', ' ').ToString();
+                vendorname = Regex.Replace(vendorname, @"[^0-9a-zA-Z]+", "");
+                //string specialistname = ds.Tables[1].Rows[0]["SpecialistName"].ToString();
+                if (vendorname.Length > 20)
+                {
+                    vendorname = vendorname.Substring(0, 20);
+                }
+                vendorname = vendorname.Trim();
+                if (!(Directory.Exists(Server.MapPath("~/Files"))))
+                {
+                    Directory.CreateDirectory(Server.MapPath("~/Files"));
+                }
+                //if (!(Directory.Exists(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname))))
+                //{
+                //    Directory.CreateDirectory(Server.MapPath(WebConfigurationManager.AppSettings["LetterPath"] + specialistname));
+                //}
+                if (!(Directory.Exists(Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + vendorname + "-" + Request.QueryString["VId"].ToString()))))
+                {
+                    Directory.CreateDirectory(Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + vendorname + "-" + Request.QueryString["VId"].ToString()));
+                }
+                string destFile = Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + vendorname + "-" + Request.QueryString["VId"].ToString() + "/" + vendorname + "_" + ddlLetters.SelectedValue + ".docx");
+                string sourceFile = Server.MapPath(WebConfigurationManager.AppSettings["TemplatePath"] + ddlLetters.SelectedValue + ".docx");
+                DirectoryInfo directory = new DirectoryInfo(Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + "/" + vendorname + "-" + Request.QueryString["VId"].ToString()));
+                foreach (FileInfo file in directory.GetFiles())
+                {
+                    if (file.Extension.ToLower().Equals(".docx"))
+                    {
+                        file.Delete();
+                    }
+                }
+                File.Copy(sourceFile, destFile, true);
+                object fileName = destFile;
+
+                using (WordprocessingDocument doc =
+           WordprocessingDocument.Open((string)fileName, true))
+                {
+                    SimplifyMarkupSettings settings = new SimplifyMarkupSettings
+                    {
+                        NormalizeXml = true, // Merges Run's in a paragraph with similar formatting
+                    };
+                    MarkupSimplifier.SimplifyMarkup(doc, settings);
+
+                    Document mainDoc = doc.MainDocumentPart.Document;
+                    try
+                    {
+                        ReplaceParagraphParts(mainDoc, "<Date>", DateTime.Now.ToString("MMMM dd, yyyy"));
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["title"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<Mr/Ms>", ds.Tables[0].Rows[0]["title"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["ownerFirstName"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<OwnerFirstName>", ds.Tables[0].Rows[0]["ownerFirstName"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["ownerLastName"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<OwnerLastName>", ds.Tables[0].Rows[0]["ownerLastName"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["vendorName"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<CompanyName>", ds.Tables[0].Rows[0]["vendorName"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["CompanyAddress"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<Address>", ds.Tables[0].Rows[0]["CompanyAddress"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["city"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<City>", ds.Tables[0].Rows[0]["city"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["state"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<State>", ds.Tables[0].Rows[0]["state"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["zipCode"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<ZipCode>", ds.Tables[0].Rows[0]["zipCode"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["webAddress"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<CompanyWebsite>", ds.Tables[0].Rows[0]["webAddress"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["swiftNumber"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<VendorID#>", ds.Tables[0].Rows[0]["swiftNumber"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["fax"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<FaxNumber>", ds.Tables[0].Rows[0]["fax"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["CompanyAddress"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<StreetAddress>", ds.Tables[0].Rows[0]["CompanyAddress"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["telephone"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<PhoneNumber>", ds.Tables[0].Rows[0]["telephone"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["productDesc"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<BusinessDescription>", ds.Tables[0].Rows[0]["productDesc"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["naicCode"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<PNAICS>", ds.Tables[0].Rows[0]["naicCode"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["region"].ToString()))
+                        {
+                            ReplaceParagraphParts(mainDoc, "<CountyName>", ds.Tables[0].Rows[0]["region"].ToString());
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["recertifiedDate"].ToString()))
+                        {
+                            DateTime daterecert = DateTime.Parse(ds.Tables[0].Rows[0]["recertifiedDate"].ToString());
+                            ReplaceParagraphParts(mainDoc, "<RecertificationDate>", daterecert.ToString("MMMM dd, yyyy"));
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["finalClassification"].ToString()))
+                        {
+                            switch (ds.Tables[0].Rows[0]["finalClassification"].ToString().Substring(0, 1))
+                            {
+                                case "A":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Asian/Pacific");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "A");
+                                    break;
+                                case "B":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Black");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "B");
+                                    break;
+                                case "H":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Hispanic");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "H");
+                                    break;
+                                case "I":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Indiginess American");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "I");
+                                    break;
+                                case "D":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Physical Disability");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "D");
+                                    break;
+                                case "W":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Woman");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "W");
+                                    break;
+                                case "R":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Rehabilitation Facilities");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "R");
+                                    break;
+                                case "V":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Veteran");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "V");
+                                    break;
+                                case "S":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Service Disabled Veteran");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "S");
+                                    break;
+                                case "L":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Labor Surplus County");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "L");
+                                    break;
+                                case "M":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "70% Median Income County");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "M");
+                                    break;
+                                case "T":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Targeted Neighborhood");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "T");
+                                    break;
+                                case "E":
+                                    ReplaceParagraphParts(mainDoc, "<Designation>", "Enterprise Zone");
+                                    ReplaceParagraphParts(mainDoc, "<DesignationLetter>", "E");
+                                    break;
+                            }
+                        }
+                        if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["certDate"].ToString()))
+                        {
+                            DateTime date = DateTime.Parse(ds.Tables[0].Rows[0]["certDate"].ToString());
+                            ReplaceParagraphParts(mainDoc, "<CertificationDate>", date.ToString("MMMM dd, yyyy"));
+                        }
+                        if (ds.Tables[0].Rows.Count > 0)
+                        {
+                            ReplaceParagraphParts(mainDoc, "<VendorsEmailAddress>", ds.Tables[1].Rows[0]["emailId"].ToString());
+                        }
+                        if (ds.Tables[1].Rows.Count > 0)
+                        {
+                            if (!string.IsNullOrEmpty(ds.Tables[1].Rows[0]["SpecialistName"].ToString()))
+                            {
+                                ReplaceParagraphParts(mainDoc, "<VendorSpecialistName>", ds.Tables[1].Rows[0]["SpecialistName"].ToString());
+                            }
+                            if (!string.IsNullOrEmpty(ds.Tables[1].Rows[0]["phoneNumber"].ToString()))
+                            {
+                                ReplaceParagraphParts(mainDoc, "<VendorSpecialistPhoneNumber>", ds.Tables[1].Rows[0]["phoneNumber"].ToString());
+                            }
+
+                        }
+                        if (ds.Tables[3].Rows.Count > 0)
+                        {
+                            string sNAICSCodes = string.Empty;
+
+                            foreach (DataRow r in ds.Tables[3].Rows)
+                            {
+                                sNAICSCodes = sNAICSCodes + r["naicCode"].ToString() + ",";
+                            }
+                            ReplaceParagraphParts(mainDoc, "<SNAICS>", sNAICSCodes.Substring(0, sNAICSCodes.Length - 2));
+                        }
+                        else
+                        {
+                            ReplaceParagraphParts(mainDoc, "<SNAICS>", string.Empty);
+                        }
+                        if (ddlLetters.SelectedValue == "RECERT REQ")
+                        {
+                            if (ds.Tables[5].Rows.Count > 0)
+                            {
+                                string owners = string.Empty;
+                                foreach (DataRow dr in ds.Tables[5].Rows)
+                                {
+                                    owners = owners + "                                                " + dr["ownershipPercentage"].ToString() + " % " + dr["ownerFirstName"].ToString() + " " + dr["ownerLastName"].ToString().Trim() + Environment.NewLine;
+                                }
+                                ReplaceParagraphParts(mainDoc, "<OwnersList>", owners);
+                            }
+                        }
+                        //Footer
+                        foreach (FooterPart footerPart in doc.MainDocumentPart.FooterParts)
+                        {
+                            if (!string.IsNullOrEmpty(ds.Tables[1].Rows[0]["phoneNumber"].ToString()))
+                            {
+                                ReplaceParagraphParts(footerPart.Footer, "<VendorSpecialistPhone>", ds.Tables[1].Rows[0]["phoneNumber"].ToString());
+                            }
+                        }
+                        foreach (FooterPart footerPart in doc.MainDocumentPart.FooterParts)
+                        {
+                            if (!string.IsNullOrEmpty(ds.Tables[1].Rows[0]["emailId"].ToString()))
+                            {
+                                ReplaceParagraphParts(footerPart.Footer, "<VendorSpecialistEmail>", ds.Tables[1].Rows[0]["emailId"].ToString());
+                            }
+                        }
+                        replaceSEQCHARACTER(mainDoc);
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+                    finally
+                    {
+                        mainDoc.Save();
+                        doc.Close();
+                        Response.Clear();
+                        Response.ContentType = "Application/octet-stream";
+                        Response.AddHeader("Content-Disposition", string.Format("attachment; filename = \"{0}\"", System.IO.Path.GetFileName(vendorname + "_" + ddlLetters.SelectedValue + ".docx")));
+                        Response.TransmitFile(destFile);
+                        Response.End();
+                    }
+
+                }
+            }
+        }
+
+        private void replaceSEQCHARACTER(OpenXmlElement element)
+        {
+            Repeat:
+            if (element.InnerText.Contains("SEQ CHAPTER"))
+            {
+                foreach (var paragraph in element.Descendants<Paragraph>())
+                {
+                    if (paragraph.InnerText.Contains("SEQ CHAPTER"))
+                    {
+                        Run newRun = new Run();
+                        newRun.AppendChild(new Text(paragraph.InnerText.Remove(0, 20)));
+                        paragraph.RemoveAllChildren<Run>();
+                        //add the newly created run
+                        paragraph.AppendChild(newRun);
+                    }
+
+                }
+                goto Repeat;
+            }
+        }
+
+        private static void ReplaceParagraphParts(OpenXmlElement element, string oldText, string replacementText)
+        {
+            foreach (var paragraph in element.Descendants<Paragraph>())
+            {
+                Regex regexText = new Regex(oldText, RegexOptions.Compiled);
+                Match match = regexText.Match(paragraph.InnerText);
+                if (match.Success)
+                {
+                    //create a new run and set its value to the correct text
+                    //this must be done before the child runs are removed otherwise
+                    //paragraph.InnerText will be empty
+                    Run newRun = new Run();
+                    newRun.AppendChild(new Text(paragraph.InnerText.Replace(match.Value, replacementText)));
+                    //remove any child runs
+                    paragraph.RemoveAllChildren<Run>();
+                    //add the newly created run
+                    paragraph.AppendChild(newRun);
+                }
+            }
+        }
+
+        //private void FindAndReplace(Microsoft.Office.Interop.Word.Application doc, object findText, object replaceWithText)
+        //{
+        //    //options
+        //    object matchCase = false;
+        //    object matchWholeWord = true;
+        //    object matchWildCards = false;
+        //    object matchSoundsLike = false;
+        //    object matchAllWordForms = false;
+        //    object forward = true;
+        //    object format = false;
+        //    object matchKashida = false;
+        //    object matchDiacritics = false;
+        //    object matchAlefHamza = false;
+        //    object matchControl = false;
+        //    object read_only = false;
+        //    object visible = true;
+        //    object replace = 2;
+        //    object wrap = 1;
+        //    //execute find and replace
+        //    doc.Selection.Find.Execute(ref findText, ref matchCase, ref matchWholeWord,
+        //        ref matchWildCards, ref matchSoundsLike, ref matchAllWordForms, ref forward, ref wrap, ref format, ref replaceWithText, ref replace,
+        //        ref matchKashida, ref matchDiacritics, ref matchAlefHamza, ref matchControl);
+        //}
+
+        //public static void ReplaceTextInWordDoc(Object findMe, Object replaceMe, Microsoft.Office.Interop.Word.Application app)
+        //{
+        //    try
+        //    {
+        //        object replaceAll = Microsoft.Office.Interop.Word.WdReplace.wdReplaceAll;
+        //        object missing = System.Reflection.Missing.Value;
+        //        app.Application.Selection.Find.ClearFormatting();
+        //        app.Application.Selection.Find.Text = (string)findMe;
+        //        app.Application.Selection.Find.Replacement.ClearFormatting();
+        //        if (replaceMe.ToString().Length < 250) // Normal execution
+        //        {
+        //            app.Application.Selection.Find.Replacement.Text = (string)replaceMe;
+        //            app.Application.Selection.Find.Execute(
+        //            ref missing, ref missing, ref missing, ref missing, ref missing,
+        //            ref missing, ref missing, ref missing, ref missing, ref missing,
+        //            ref replaceAll, ref missing, ref missing, ref missing, ref missing);
+        //        }
+        //        else  // Some real simple logic!!
+        //        {
+        //            app.Application.Selection.Find.Execute(
+        //            ref findMe, ref missing, ref missing, ref missing, ref missing,
+        //            ref missing, ref missing, ref missing, ref missing, ref missing,
+        //            ref missing, ref missing, ref missing, ref missing, ref missing);
+        //            // the area where the findMe is located in the Document is selected.
+        //            // Hence when you execute the statement below the replaceMe string is
+        //            // placed in the area selected, which is what we wanted!
+        //            app.Application.Selection.Text = (string)replaceMe;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //    }
+        //}
+
+        protected void btnSavePreview_Click(object sender, EventArgs e)
+        {
+            if (ddlLetters.SelectedIndex != 0)
+            {
+                divError.Attributes.Add("style", "display:none");
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Select Appropriate Letter";
+                return;
+            }
+            if (fileUploader.HasFile)
+            {
+                string Extension = Path.GetExtension(fileUploader.PostedFile.FileName);
+                if (!(Extension == ".docx" || Extension == ".doc"))
+                {
+                    divError.Attributes.Add("style", "display:block");
+                    lblError.Text = "Invalid FileType!!Please Upload the Proper File";
+                    return;
+                }
+
+                string qur = dbLibrary.idBuildQuery("[proc_getDataForLetter]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString(), ddlLetters.SelectedValue);
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                if (ds.Tables[0].Rows.Count > 0)
+                {
+                    string vendorname = ds.Tables[0].Rows[0]["vendorName"].ToString().Replace('.', ' ').ToString().Replace(',', ' ').ToString();
+                    vendorname = Regex.Replace(vendorname, @"[^0-9a-zA-Z]+", "");
+                    if (vendorname.Length > 20)
+                    {
+                        vendorname = vendorname.Substring(0, 20);
+                    }
+                    vendorname = vendorname.Trim();
+                    //  string specialistname = ds.Tables[1].Rows[0]["SpecialistName"].ToString();
+                    //if (!(Directory.Exists(Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + specialistname))))
+                    //{
+                    //    Directory.CreateDirectory(Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + specialistname));
+                    //}
+                    if (!(Directory.Exists(Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + vendorname + "-" + Request.QueryString["VId"].ToString()))))
+                    {
+                        Directory.CreateDirectory(Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + vendorname + "-" + Request.QueryString["VId"].ToString()));
+                    }
+                    string destFile = Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + vendorname + "-" + Request.QueryString["VId"].ToString() + "/" + ddlLetters.SelectedValue + ".docx");
+                    divError.Attributes.Add("style", "display:none");
+                    string extension = fileUploader.FileName.Split('.')[1];
+                    if (extension == "docx")
+                    {
+                        DirectoryInfo directory = new DirectoryInfo(Server.MapPath(WebConfigurationManager.AppSettings["FilePath"] + "/" + vendorname + "-" + Request.QueryString["VId"].ToString()));
+                        foreach (FileInfo file in directory.GetFiles())
+                        {
+                            if (file.Extension.ToLower().Equals(".docx"))
+                            {
+                                file.Delete();
+                            }
+                        }
+                        fileUploader.SaveAs(destFile);
+                        object sourcepath = destFile;
+
+
+
+                        //  Application newApp = new Application();
+                        //    Documents d = newApp.Documents;
+                        //  object Unknown = Type.Missing;
+                        //Document od = d.Open(ref sourcepath, ref Unknown,
+                        //                         ref Unknown, ref Unknown, ref Unknown,
+                        //                         ref Unknown, ref Unknown, ref Unknown,
+                        //                         ref Unknown, ref Unknown, ref Unknown,
+                        //                         ref Unknown, ref Unknown, ref Unknown, ref Unknown);
+                        //newApp.Visible = false;
+                        //od.Activate();
+                        try
+                        {
+                            //   object fileFormat = WdSaveFormat.wdFormatPDF;
+                            if (ds.Tables[2].Rows.Count > 0)
+                            {
+                                string fileName = ds.Tables[2].Rows[0]["filePath"].ToString().Split('_')[1].ToString();
+                                int count = int.Parse(fileName.Split('.')[0].ToString());
+                                count++;
+                                sourcepath = sourcepath.ToString().Replace(".docx", "_" + count + ".pdf");
+                            }
+                            else
+                            {
+                                sourcepath = sourcepath.ToString().Replace(".docx", "_1.pdf");
+                            }
+                            Spire.Doc.Document doc = new Spire.Doc.Document();
+                            doc.LoadFromFile(destFile);
+                            doc.SaveToFile(sourcepath.ToString(), Spire.Doc.FileFormat.PDF);
+                            //od.SaveAs(ref sourcepath, ref fileFormat,
+                            //            ref Unknown, ref Unknown, ref Unknown,
+                            //            ref Unknown, ref Unknown, ref Unknown,
+                            //            ref Unknown, ref Unknown, ref Unknown,
+                            //            ref Unknown, ref Unknown, ref Unknown,
+                            //            ref Unknown, ref Unknown);
+                            string qry = dbLibrary.idBuildQuery("[proc_saveLetterInfo]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString(), ddlLetters.SelectedValue, sourcepath.ToString());
+                            btnSendLetter.CommandName = dbLibrary.idGetAFieldByQuery(qry);
+                            btnSendLetter.CommandArgument = sourcepath.ToString();
+                            int n = sourcepath.ToString().Split('\\').Length;
+                            iframepdf.Src = "../" + sourcepath.ToString().Split('\\')[n - 3] + "/" + sourcepath.ToString().Split('\\')[n - 2] + "/" + sourcepath.ToString().Split('\\')[n - 1];
+                        }
+                        catch
+                        {
+                            throw;
+                        }
+                        finally
+                        {
+                            //od.Close(WdSaveOptions.wdSaveChanges);
+                            //((_Application)newApp).Quit(ref Unknown, ref Unknown, ref Unknown);
+                            File.Delete(destFile);
+                        }
+                        txtSubject.Text = ds.Tables[0].Rows[0]["vendorName"].ToString() + " - " + lblStatus.Text;
+                        if (ds.Tables[4].Rows.Count > 0)
+                        {
+                            txtBody.Text = ds.Tables[4].Rows[0]["eMailBody"].ToString();
+
+                        }
+                        lblLetterMsg.Text = "Letter Generated Successfully!!!";
+                        lblLetterMsg.Attributes.Add("style", "color:green");
+                        iframepdf.Visible = true;
+                        btnSavePreview.Visible = true;
+                        ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "LetterPreview();", true);
+                    }
+                    else
+                    {
+                        divError.Attributes.Add("style", "display:block");
+                        lblError.Text = "Invalid File!!Please Upload Only docx file";
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Please Upload the File to Preview";
+                return;
+            }
+        }
+        protected void lnkRules_Click(object sender, EventArgs e)
+        {
+            string qur = "select description, status from   VendorRulesResult where vendorId=" + Request.QueryString["VId"];
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            grdRulesView.DataSource = ds;
+            grdRulesView.DataBind();
+
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModalRulesView();", true);
+        }
+
+        protected void btnSendLetter_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string qur = dbLibrary.idBuildQuery("[proc_getDataToEmail]", Session["UserId"].ToString(), Request.QueryString["VId"].ToString());
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                if (!string.IsNullOrEmpty(ds.Tables[0].Rows[0]["emailId"].ToString()))
+                {
+                    System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage();
+                    SmtpClient SmtpServer = new SmtpClient(WebConfigurationManager.AppSettings["SmtpClient"]);
+                    mail.From = new MailAddress(WebConfigurationManager.AppSettings["FromEmailAddress"]);
+                    mail.To.Add(ds.Tables[0].Rows[0]["emailId"].ToString());
+                    mail.To.Add(WebConfigurationManager.AppSettings["BccEmailAddress"]);
+                    mail.Subject = txtSubject.Text;
+                    mail.IsBodyHtml = true;
+                    string path = Server.MapPath(WebConfigurationManager.AppSettings["SignatureLogo"]);
+                    LinkedResource Img = new LinkedResource(path, MediaTypeNames.Image.Jpeg);
+                    Img.ContentId = "MyImage";
+                    string str = @"<table style='font-family:Calibri;color:#003865'><tr><td> Dear " + ds.Tables[0].Rows[0]["vendorName"].ToString() + "</td></tr><tr><td>" + txtBody.Text + "</td></tr><tr></tr><tr></tr><tr></tr><tr><td><img src=cid:MyImage  id='img' alt='' width='100px' height='100px'/></td></tr><tr><td><b>" + ds.Tables[1].Rows[0]["SpecialistName"].ToString() + " | Vendor Specialist</b></td></tr><tr><td>" + WebConfigurationManager.AppSettings["AddressLine1"] + "</td></tr><tr><td>" + WebConfigurationManager.AppSettings["AddressLine2"] + "</td></tr><tr><td>" + ds.Tables[1].Rows[0]["phoneNumber"].ToString() + "</td></tr><tr><td>" + ds.Tables[1].Rows[0]["emailId"].ToString() + "</td></tr></table>";
+                    AlternateView AV = AlternateView.CreateAlternateViewFromString(str, null, MediaTypeNames.Text.Html);
+                    AV.LinkedResources.Add(Img);
+                    mail.AlternateViews.Add(AV);
+                    Attachment attachment = new Attachment(btnSendLetter.CommandArgument);
+                    mail.Attachments.Add(attachment);
+                    SmtpServer.Port = int.Parse(WebConfigurationManager.AppSettings["EmailPort"]);
+                    SmtpServer.EnableSsl = Boolean.Parse(WebConfigurationManager.AppSettings["EnableSSL"]);
+                    SmtpServer.Send(mail);
+                    divError.Attributes.Add("style", "display:block");
+                    lblError.Style.Value = "color: green";
+                    lblError.Text = "Letter Sent Successfully!!!";
+                    string qry = dbLibrary.idBuildQuery("[proc_saveE-MailInfo]", Request.QueryString["VId"].ToString(), Session["UserId"].ToString(), btnSendLetter.CommandName, ddlLetters.SelectedValue, txtSubject.Text, txtBody.Text, Session["UserId"].ToString());
+                    string eMailStatus = dbLibrary.idGetAFieldByQuery(qry);
+                    if (eMailStatus == string.Empty)
+                    {
+                        lblError.Style.Value = "color: red";
+                        lblError.Text = "Letter Sent Successfully!!! But error while saving the eMail info in Database.";
+                    }
+                    txtBody.Text = "";
+                    txtSubject.Text = "";
+                }
+                else
+                {
+                    divError.Attributes.Add("style", "display:block");
+                    lblError.Text = "No e-Mail ID present for this Vendor, Please update e-Mail ID and Send Letter.";
+                }
+            }
+            catch (Exception ex)
+            {
+                divError.Attributes.Add("style", "display:block");
+                lblError.Text = "Error While Sending the Letter, Please Try Again !!!";
+            }
+        }
+
+        protected void btnOverRide_Click(object sender, EventArgs e)
+        {
+            string status = radbtnApprove.Checked == true ? "Approved" : radbtnDeny.Checked == true ? "Denied" : radbtnPending.Checked == true ? "Pending" : "Removed";
+            string qur = dbLibrary.idBuildQuery("[proc_overrideCertStatus]", Request.QueryString["VId"], status, txtOverrideReason.Text, status == "Approved" ? DateTime.Now.AddYears(1).ToString() : "", Session["UserId"].ToString());
+            dbLibrary.idExecute(qur);
+            Response.Redirect("vmpUsrStatus.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void btnBack_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor4.aspx?VId=" + Request.QueryString["VId"] + "&EditMode=True");
+        }
+    }
+}

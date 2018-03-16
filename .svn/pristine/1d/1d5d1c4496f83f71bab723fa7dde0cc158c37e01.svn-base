@@ -1,0 +1,70 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/vmpUsrMaster.Master" AutoEventWireup="true" CodeBehind="vmpUsrReport.aspx.cs" Inherits="VMP_1._0.User.vmpUsrReport" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+      <script src="../js/jquery-ui.js"></script>
+    <link href="../Content/jquery-ui.css" rel="stylesheet" />
+    <script>
+        //function pageLoad(sender, args) {
+        $(document).ready(function () {
+            //jQuery.noConflict();
+            $('.Otherdatepicker').datepicker();
+        });
+    </script>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+   <div class="container">
+       <h2 style="text-align:center">Report</h2>
+       <div class="row" style="margin-top:40px; ">
+           <div class="col-md-2" style="text-align:right">
+               <label style="margin-top: 5px;">Report Type</label>
+           </div>
+           <div class="col-md-8">
+               <asp:DropDownList ID="ddlSelectReport" runat="server" CssClass="form-control">
+                   <asp:ListItem>Vendors based on Category</asp:ListItem>
+                   <asp:ListItem>Vendors due to be certified</asp:ListItem>
+                   <asp:ListItem>Vendors Application in Progress</asp:ListItem>
+               </asp:DropDownList>
+           </div>
+           <div class="col-md-2"></div>
+       </div>
+        <div class="row">
+           <div class="col-md-2" style="text-align:right">
+               <label style="margin-top: 5px;">Category</label>
+           </div>
+           <div class="col-md-4">
+               <asp:DropDownList ID="DropDownList1" runat="server" CssClass="form-control" style="margin-top:10px;">
+                   <asp:ListItem>Goods & Services</asp:ListItem>
+                   <asp:ListItem>Professional & Technical</asp:ListItem>
+                   <asp:ListItem>Construction</asp:ListItem>
+                   <asp:ListItem>IT</asp:ListItem>
+               </asp:DropDownList>
+           </div>
+           <div class="col-md-6"></div>
+       </div>
+       <div class="row" style="margin-top:10px;">
+           <div class="col-md-1"></div>
+           <div class="col-md-3">
+               <div class="col-md-5"></div>
+               <div class="col-md-7">
+               <label style="margin-top: 5px;">Date From:</label>
+               </div>
+           </div>
+           <div class="col-md-2" style="margin-left:-60px;">
+               <asp:TextBox ID="txtFrom" runat="server" CssClass="form-control Otherdatepicker"></asp:TextBox>
+           </div>
+           <div class="col-md-1"></div>
+           <div class="col-md-1">
+               <label style="margin-top: 5px;">Date To:</label>
+           </div>
+           <div class="col-md-2">
+               <asp:TextBox ID="txtTo" runat="server" CssClass="form-control Otherdatepicker"></asp:TextBox>
+           </div>
+           <div class="col-md-2"></div>
+       </div>
+       <div class="row" style="margin-top:20px;">
+           <div class="col-md-12" style="text-align:center">
+               <asp:Button ID="btnGetReport" runat="server" CssClass="btn btn-primary" Text="Generate Report" />
+           </div>
+       </div>
+   </div>
+
+</asp:Content>

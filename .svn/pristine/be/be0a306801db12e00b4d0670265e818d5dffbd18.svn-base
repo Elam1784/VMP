@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0
+{
+    public partial class test : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            string qur = "Select * from temp where questionId='2'";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            radbuttemp.DataSource = ds;
+            radbuttemp.DataTextField = "Options";
+            radbuttemp.DataValueField = "Id";
+            radbuttemp.DataBind();
+        }
+    }
+}

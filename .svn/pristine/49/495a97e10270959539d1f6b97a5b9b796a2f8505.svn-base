@@ -1,0 +1,23 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Logout.aspx.cs" Inherits="VMP_1._0.Logout" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+     <title>VMP</title>
+    <script type="text/javascript">
+        history.pushState(null, null, document.URL);
+        window.addEventListener('popstate', function () {
+            history.pushState(null, null, document.URL);
+        });
+    </script>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div style="margin-top:15%;">
+            <div style="text-align:center;color:red;"><h1>Successfully Logged Out</h1></div>
+            <div style="text-align:center;"><h3><a href="Login.aspx">Click here</a> to login again.</h3></div>
+        </div>
+    </form>
+</body>
+</html>

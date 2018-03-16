@@ -1,0 +1,238 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.Admin
+{
+    public partial class vmpAdmHome : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if(!(IsPostBack))
+            {
+                if(Request.QueryString["Response"]!=null)
+                {
+                    if(Request.QueryString["Response"]=="Reject")
+                    {
+                        lblError.Text = "Application Rejected and Deleted Successfully";
+                        Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+                    }
+                    else if (Request.QueryString["Response"] == "Approve")
+                    {
+                        lblError.Text = "Application Accepted and Moved to VMP Successfully";
+                        Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+                    }
+                }
+            }
+        }
+
+        protected void Page_PreRender(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                // Get value from the database for statistics
+                string qur = dbLibrary.idBuildQuery("proc_getStatsData", Session["UserId"].ToString(), bool.Parse(Session["isAdmin"].ToString()) ? "1" : "0");
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                ViewState["homeStats"] = ds;
+
+                grdProgress.DataSource = ds.Tables[9];
+                grdProgress.DataBind();
+
+                if (ds.Tables[2].Rows.Count > 0)
+                {
+                    int black = 0;
+                    int hispanic = 0;
+                    int asian = 0;
+                    int indiginessAmerican = 0;
+                    int women = 0;
+                    int physicallyDisabled = 0;
+                    int veteran = 0;
+                    int serviceDisabled = 0;
+                    int rehab = 0;
+                    int LaborSurplus = 0;
+                    int medianIncome = 0;
+                    int targetedNeighbor = 0;
+                    int enterpriseZone = 0;
+                    int minority = 0;
+                    int EDR = 0;
+                    int totalVeteran = 0;
+                    int Total = 0;
+                    foreach (DataRow dr in ds.Tables[2].Rows)
+                    {
+                        if (dr["Category"].ToString().Trim().Length > 0)
+                        {
+                            string firstLetter = dr["Category"].ToString().Substring(0, 1);
+                            switch (firstLetter)
+                            {
+                                case "B":
+                                    black = int.Parse(dr["Count"].ToString());
+                                    minority = int.Parse(dr["Count"].ToString()) + minority;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "H":
+                                    hispanic = int.Parse(dr["Count"].ToString());
+                                    minority = int.Parse(dr["Count"].ToString()) + minority;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "A":
+                                    asian = int.Parse(dr["Count"].ToString());
+                                    minority = int.Parse(dr["Count"].ToString()) + minority;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "I":
+                                    indiginessAmerican = int.Parse(dr["Count"].ToString());
+                                    minority = int.Parse(dr["Count"].ToString()) + minority;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "W":
+                                    women = int.Parse(dr["Count"].ToString());
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "D":
+                                    physicallyDisabled = int.Parse(dr["Count"].ToString());
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "V":
+                                    veteran = int.Parse(dr["Count"].ToString());
+                                    totalVeteran = int.Parse(dr["Count"].ToString()) + totalVeteran;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "S":
+                                    serviceDisabled = int.Parse(dr["Count"].ToString());
+                                    totalVeteran = int.Parse(dr["Count"].ToString()) + totalVeteran;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "R":
+                                    rehab = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "L":
+                                    LaborSurplus = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "M":
+                                    medianIncome = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "T":
+                                    targetedNeighbor = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                                case "E":
+                                    enterpriseZone = int.Parse(dr["Count"].ToString());
+                                    EDR = int.Parse(dr["Count"].ToString()) + EDR;
+                                    Total = int.Parse(dr["Count"].ToString()) + Total;
+                                    break;
+                            }
+                        }
+                    }
+                    lblMinority.Text = minority.ToString();
+                    lblWomen.Text = women.ToString();
+                    lblDisabled.Text = physicallyDisabled.ToString();
+                    lblEDR.Text = EDR.ToString();
+                    lblVeteran.Text = totalVeteran.ToString();
+                    lblTotal.Text = Total.ToString();
+                    lblBlackCount.Text = black.ToString();
+                    lblAsianCount.Text = asian.ToString();
+                    lblIndiginessAmericanCount.Text = indiginessAmerican.ToString();
+                    lblHispanicCount.Text = hispanic.ToString();
+                    lblVeteranCount.Text = veteran.ToString();
+                    lblServiceDisabledCount.Text = serviceDisabled.ToString();
+                    lblRehabCount.Text = rehab.ToString();
+                    lblLaborSurplusCount.Text = LaborSurplus.ToString();
+                    lblMedianIncomeCount.Text = medianIncome.ToString();
+                    lblTargetedNeighborCount.Text = targetedNeighbor.ToString();
+                    lblEnterpriseZoneCount.Text = enterpriseZone.ToString();
+                }
+                //Portal Data Retrieving
+                qur = "Select applicationId, uuid, vendorName,addedDateTime,case when isNewApplication='1' then 'Yes' else 'No' END as isNewApplication, DATEDIFF(DAY,addedDateTime,GETDATE()) as DaysSinceArrived from vendorDetails where vendorId is null and isDeleted='0'";
+                DataSet ds1 = dbLibrary.idGetCustomResultPortal(qur);
+                if (ds1.Tables[0].Rows.Count > 0)
+                {
+                    ViewState["portalApps"] = ds1;
+                    lblPortalAppsCount.Text = ds1.Tables[0].Rows.Count.ToString();
+                }
+                grdPortalApps.DataSource = ds1;
+                grdPortalApps.DataBind();
+            }
+        }
+
+        protected void grdProgress_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdProgress.PageIndex = e.NewPageIndex;
+            grdProgress.DataSource = ((DataSet)ViewState["homeStats"]).Tables[9];
+            grdProgress.DataBind();
+        }
+
+        protected void lnkMinorityDetails_Click(object sender, EventArgs e)
+        {
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+            divBlack.Attributes.Add("style", "margin-top:10px;display: block;");
+            divAsian.Attributes.Add("style", "margin-top:10px;display: block;");
+            divHispanic.Attributes.Add("style", "margin-top:10px;display: block;");
+            divIndiginessAmerican.Attributes.Add("style", "margin-top:10px;display: block;");
+            divVeteran.Attributes.Add("style", "margin-top:10px;display: none;");
+            divServiceDisabled.Attributes.Add("style", "margin-top:10px;display: none;");
+            divRehab.Attributes.Add("style", "margin-top:10px;display: none;");
+            divLaborSurplus.Attributes.Add("style", "margin-top:10px;display: none;");
+            divMedianIncome.Attributes.Add("style", "margin-top:10px;display: none;");
+            divTargetedNeighbor.Attributes.Add("style", "margin-top:10px;display: none;");
+            divEnterpriseZone.Attributes.Add("style", "margin-top:10px;display: none;");
+            lblModalHeading.Text = "Vendors By Designation - Minority";
+        }
+
+        protected void lnkEDRDetails_Click(object sender, EventArgs e)
+        {
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+            divRehab.Attributes.Add("style", "margin-top:10px;display: block;");
+            divLaborSurplus.Attributes.Add("style", "margin-top:10px;display: block;");
+            divMedianIncome.Attributes.Add("style", "margin-top:10px;display: block;");
+            divTargetedNeighbor.Attributes.Add("style", "margin-top:10px;display: block;");
+            divEnterpriseZone.Attributes.Add("style", "margin-top:10px;display: block;");
+            divBlack.Attributes.Add("style", "margin-top:10px;display: none;");
+            divAsian.Attributes.Add("style", "margin-top:10px;display: none;");
+            divHispanic.Attributes.Add("style", "margin-top:10px;display: none;");
+            divIndiginessAmerican.Attributes.Add("style", "margin-top:10px;display: none;");
+            divVeteran.Attributes.Add("style", "margin-top:10px;display: none;");
+            divServiceDisabled.Attributes.Add("style", "margin-top:10px;display: none;");
+            lblModalHeading.Text = "Vendors By Designation - Economically Disadvantaged";
+        }
+
+        protected void lnkbtnVeteranDetails_Click(object sender, EventArgs e)
+        {
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "Pop", "showModal();", true);
+            divVeteran.Attributes.Add("style", "margin-top:10px;display: block;");
+            divServiceDisabled.Attributes.Add("style", "margin-top:10px;display: block;");
+            divRehab.Attributes.Add("style", "margin-top:10px;display: none;");
+            divLaborSurplus.Attributes.Add("style", "margin-top:10px;display: none;");
+            divMedianIncome.Attributes.Add("style", "margin-top:10px;display: none;");
+            divTargetedNeighbor.Attributes.Add("style", "margin-top:10px;display: none;");
+            divEnterpriseZone.Attributes.Add("style", "margin-top:10px;display: none;");
+            divBlack.Attributes.Add("style", "margin-top:10px;display: none;");
+            divAsian.Attributes.Add("style", "margin-top:10px;display: none;");
+            divHispanic.Attributes.Add("style", "margin-top:10px;display: none;");
+            divIndiginessAmerican.Attributes.Add("style", "margin-top:10px;display: none;");
+            lblModalHeading.Text = "Vendors By Designation - Veteran";
+        }
+
+        protected void grdPortalApps_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdPortalApps.PageIndex = e.NewPageIndex;
+            grdPortalApps.DataSource = ((DataSet)ViewState["portalApps"]);
+            grdPortalApps.DataBind();
+        }
+    }
+}

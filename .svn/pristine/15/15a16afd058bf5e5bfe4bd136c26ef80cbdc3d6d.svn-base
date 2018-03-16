@@ -1,0 +1,42 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Admin/vmpAdmMaster.Master" AutoEventWireup="true" CodeBehind="vmpAdmNaic.aspx.cs" Inherits="VMP_1._0.Admin.vmpAdmNaic" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+     <script>
+         $(document).ready(function () {
+            $("#navbar7 li").removeClass("active");//this will remove the active class from  
+            $('#menu').addClass('active');//previously active menu item 
+        });
+    </script>
+    <style>
+        .table1 tr, td, th {
+            text-align: left !important;
+        }
+    </style>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <div style="display: none; text-align: center" id="myMessage1" runat="server" class="alert alert-success col-sm-12">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <asp:Label ID="lblError" runat="server" Text="Saved Successfully"></asp:Label>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3"></div>
+            <div class="col-md-6">
+                <ul class="nav nav-pills">
+                    <li role="presentation" class="active" runat="server" id="liNSA">
+                        <asp:LinkButton ID="lnkbtnNSA" runat="server" Text="Manage NAIC Specialist Area" CssClass="btn-link" OnClick="lnkbtnNSA_Click"></asp:LinkButton></li>
+                    <li role="presentation" runat="server" id="liMSA">
+                        <asp:LinkButton ID="lnkbtnMSA" runat="server" Text="Manage Specialist Area" CssClass="btn-link" OnClick="lnkbtnMSA_Click"></asp:LinkButton></li>
+                </ul>
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+    </div>
+    <br />
+    <br />
+    <asp:MultiView ID="MultiViewNAIC" runat="server">
+        <asp:View ID="viewNSA" runat="server">
+        </asp:View>
+        <asp:View ID="viewMSA" runat="server">
+        </asp:View>
+    </asp:MultiView>
+</asp:Content>

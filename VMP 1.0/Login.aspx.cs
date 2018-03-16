@@ -1,0 +1,44 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0
+{
+    public partial class Login : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                string name = User.Identity.Name;
+                string qur = dbLibrary.idBuildQuery("sp_Login", User.Identity.Name.Split('\\')[1].ToString());
+                    DataSet ds = dbLibrary.idGetCustomResult(qur);
+                    if (ds.Tables[0].Rows.Count > 0)
+                    {
+                        Session["UserId"] = ds.Tables[0].Rows[0][0].ToString();
+                        bool isAdmin = bool.Parse(ds.Tables[0].Rows[0][1].ToString());
+                        if (isAdmin)
+                        {
+                            Session["isAdmin"] = true;
+                            Response.AddHeader("REFRESH", "1;URL=Admin/vmpAdmHome.aspx");
+                        }
+                        else
+                        {
+                            Session["isAdmin"] = false;
+                            Response.AddHeader("REFRESH", "1;URL=User/vmpUsrHome.aspx");
+                        }
+                    }
+                else
+                {
+                    Response.Redirect("AccessDenied.aspx");
+                }
+            }
+        }
+    }
+}

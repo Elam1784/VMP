@@ -1,0 +1,105 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0
+{
+    public partial class test3 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+
+            // DropDownList1.Items[1].Attributes.Add("title", "sample title 1");
+            // DropDownList1.Items[1].Attributes.Add("class", "tooltips");
+            //// DropDownList1.Items[1].Attributes.Add("data-placement", "right");
+
+            // DropDownList1.Items[2].Attributes.Add("title", "sample title 2");
+            // DropDownList1.Items[2].Attributes.Add("class", "tooltips");
+            // //  DropDownList1.Items[2].Attributes.Add("data-placement", "right");
+
+
+            // DropDownList2.Items[1].Attributes.Add("class", "good");
+            // DropDownList2.Items[3].Attributes.Add("class", "bad");
+            if (!IsPostBack)
+            {
+                loadNaicCodes();
+            }
+            //string qur = "EXEC [proc_getNAICCode]";
+            //DataSet ds = dbLibrary.idGetCustomResult(qur);
+            //if (ds != null)
+            //{
+            //    chkbxSNaic.DataValueField = "naicId";
+            //    chkbxSNaic.DataTextField = "naicCode";
+            //    chkbxSNaic.DataSource = ds;
+            //    chkbxSNaic.DataBind();
+            //    LoadSecondaryTooltip();
+            //}
+        }
+
+        private void LoadSecondaryTooltip()
+        {
+            string qur = "EXEC [proc_getNAICCode]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds != null)
+            {
+                foreach (ListItem li in chkbxSNaic.Items)
+                {
+                    foreach (DataRow dr in ds.Tables[0].Rows)
+                    {
+                        if (li.Value == dr.ItemArray[0].ToString())
+                        {
+                            li.Attributes.Add("title", dr.ItemArray[2].ToString());
+                            li.Attributes.Add("data-placement", "right");
+                            li.Attributes.Add("class", "tooltips");
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        protected void DropDownList1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+        }
+
+        protected void ddlPNAIC_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (ddlPNAIC.SelectedIndex != 0)
+            {
+                divSNaic.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divSNaic.Attributes.Add("style", "display:none");
+            }
+            LoadSecondaryTooltip();
+        }
+        private void loadNaicCodes()
+        {
+            string qur = "EXEC [proc_getNAICCode]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds != null)
+            {
+                //Primary NAIC Code
+                ddlPNAIC.DataValueField = "naicId";
+                ddlPNAIC.DataTextField = "naicCode";
+                ddlPNAIC.DataSource = ds;
+                ddlPNAIC.DataBind();
+                ddlPNAIC.Items.Insert(0, new ListItem("--Select--", "-1"));
+                ddlPNAIC.SelectedValue = "-1";
+
+                //Secondary NAIC Codes
+                chkbxSNaic.DataValueField = "naicId";
+                chkbxSNaic.DataTextField = "naicCode";
+                chkbxSNaic.DataSource = ds;
+                chkbxSNaic.DataBind();
+                LoadSecondaryTooltip();
+            }
+        }
+    }
+}

@@ -1,0 +1,103 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.Admin
+{
+    public partial class vmpAdmRules : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                MultiViewRules.SetActiveView(ViewAddRules);
+                Loadcolumns();
+            }
+        }
+
+        protected void ddlTable_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Loadcolumns();
+        }
+
+        private void Loadcolumns()
+        {
+            string qur = "select COLUMN_NAME,DATA_TYPE from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = '" + ddlTable.SelectedValue + "'";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds != null)
+            {
+                ddlColumn.DataValueField = "COLUMN_NAME";
+                ddlColumn.DataTextField = "COLUMN_NAME";
+                ddlColumn.DataSource = ds;
+                ddlColumn.DataBind();
+                ViewState["ColumnSchema"] = ds;
+            }
+        }
+
+        protected void ddlColumn_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (isBitColumnType() == "bit")
+            {
+                divValue.Attributes.Add("style", "margin-top: 10px; display:none;");
+                divBit.Attributes.Add("style", "margin-top: 10px; display:block;");
+                RequiredFieldValidator2.Enabled = false;
+            }
+            else
+            {
+                divValue.Attributes.Add("style", "margin-top: 10px; display:block;");
+                divBit.Attributes.Add("style", "margin-top: 10px; display:none;");
+                RequiredFieldValidator2.Enabled = true;
+            }
+        }
+
+        private string isBitColumnType()
+        {
+            DataSet ds = (DataSet)ViewState["ColumnSchema"];
+            DataTable dtColumns = ds.Tables[0];
+            var columnType = from DataRow myRow in dtColumns.Rows
+                                where (string)myRow["COLUMN_NAME"] == ddlColumn.SelectedValue.ToString()
+                          select myRow["DATA_TYPE"];
+                return columnType.ElementAt(0).ToString();
+        }
+
+        protected void ddlStatus_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (ddlStatus.SelectedValue == "-1")
+            {
+                divIndRules.Attributes.Add("style", "display:none;");
+                chkTarget.Checked = false;
+                chkVeteran.Checked = false;
+                chkEDR.Checked = false;
+                txtDescription.Text = string.Empty;
+            }
+            else 
+            {
+                divIndRules.Attributes.Add("style", "display:block;");
+            }
+        }
+
+        protected void btnSave_Click(object sender, EventArgs e)
+        {
+            bool saveRule = true;
+            if (ddlStatus.SelectedValue != "-1" && ((!chkTarget.Checked && !chkVeteran.Checked && !chkTarget.Checked) || (ddlStatus.SelectedValue != "-1" && txtDescription.Text.Trim() == string.Empty)))
+            {
+                saveRule = false;
+            }
+            if(saveRule)
+            {
+                string qur = dbLibrary.idBuildQuery("[proc_SaveRule]", txtRuleName.Text.ToString(), chkTarget.Checked.ToString(), chkVeteran.Checked.ToString(), chkEDR.Checked.ToString(), ddlTable.SelectedValue.ToString(), ddlColumn.SelectedItem.Text.ToString(), ddlCondition.SelectedValue.ToString(), isBitColumnType() != "bit" ? txtValue.Text.ToString():ddlConditionValue.SelectedValue.ToString(), ddlStatus.SelectedValue.ToString(), txtDescription.Text.ToString());
+                dbLibrary.idGetAFieldByQuery(qur);
+                Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction1", "runEffect1()", true);
+            }
+            else
+            {
+                Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction", "preventSave()", true);
+            }
+        }
+    }
+}

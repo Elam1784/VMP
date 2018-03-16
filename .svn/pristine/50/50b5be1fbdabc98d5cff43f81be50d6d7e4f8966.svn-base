@@ -1,0 +1,33 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace VMP_1._0.Admin
+{
+    public partial class vmpAdmNaic : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                MultiViewNAIC.SetActiveView(viewNSA);
+            }
+        }
+        protected void lnkbtnNSA_Click(object sender, EventArgs e)
+        {
+            liNSA.Attributes.Add("class", "active");
+            liMSA.Attributes["class"] = "";
+            MultiViewNAIC.SetActiveView(viewNSA);
+        }
+
+        protected void lnkbtnMSA_Click(object sender, EventArgs e)
+        {
+            liNSA.Attributes["class"] = "";
+            liMSA.Attributes.Add("class", "active");
+            MultiViewNAIC.SetActiveView(viewMSA);
+        }
+    }
+}

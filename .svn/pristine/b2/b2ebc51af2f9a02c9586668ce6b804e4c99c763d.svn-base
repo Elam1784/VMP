@@ -1,0 +1,132 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrVendor4 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                if (Request.QueryString["VId"] != null)
+                {
+                    loadStepsProgress();
+                }
+            }
+        }
+
+        private void loadStepsProgress()
+        {
+            //string qur = dbLibrary.idBuildQuery("proc_getNewVendorProgress", Request.QueryString["VId"].ToString());
+            //DataSet ds = dbLibrary.idGetCustomResult(qur);
+
+            divStep1.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+            divStep2.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+            divStep3.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+            divStep4.Attributes.Add("class", "col-xs-3 bs-wizard-step active");
+            //if ((bool)ds.Tables[0].Rows[0]["step4"] == true)
+            //{
+            //    divStep4.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+            //}
+            //else
+            //{
+            //    divStep4.Attributes.Add("class", "col-xs-3 bs-wizard-step disabled");
+            //}
+        }
+
+        protected void btnBack_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor3a.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void lnkStep1_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor1.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void lnkStep2_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor2.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void lnkStep3_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor3.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void radCorp_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+
+        protected void radPartnership_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+
+        protected void radProprietorship_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+
+        protected void radNonProfit_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+
+        protected void radLLC_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+        private void loadDiv()
+        {
+            if (radCorp.Checked == true)
+            {
+                divArticles.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divArticles.Attributes.Add("style", "display:none");
+            }
+            if (radPartnership.Checked == true)
+            {
+                divPartnership.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divPartnership.Attributes.Add("style", "display:none");
+            }
+            if (radProprietorship.Checked == true)
+            {
+                divProprietorship.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divProprietorship.Attributes.Add("style", "display:none");
+            }
+        }
+
+        protected void chkArticles_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(chkArticles.Items[0].Selected)
+            {
+                divCD.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divCD.Attributes.Add("style", "display:none");
+            }
+        }
+    }
+}

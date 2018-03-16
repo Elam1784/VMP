@@ -1,0 +1,311 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Xml.Linq;
+using VMP.Library;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using iTextSharp.text.html;
+using iTextSharp.text.html.simpleparser;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrReport : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            //clearAll();
+        }
+
+        private void clearAll()
+        {
+            lnkExport.Visible = false;
+            lblNoResult.Visible = false;
+        }
+
+        protected void ddlReportType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+           
+            switch (ddlReportType.SelectedValue)
+            {
+                case "-1":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "1":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "Category";
+                    chkSubMenu.Items.Add(new System.Web.UI.WebControls.ListItem("Goods", "1"));
+                    chkSubMenu.Items.Add(new System.Web.UI.WebControls.ListItem("Services", "2"));
+                    chkSubMenu.Items.Add(new System.Web.UI.WebControls.ListItem("Professional & Technical", "3"));
+                    chkSubMenu.Items.Add(new System.Web.UI.WebControls.ListItem("Construction", "4"));
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "2":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:block;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:block;margin-top:10px");
+                    chkCategory.Items.Clear();
+                    chkSpecialist.Items.Clear();
+                    string qurS= "EXEC [proc_getUserList]";
+                    DataSet dsS= dbLibrary.idGetCustomResult(qurS);
+                    if (dsS != null)
+                    {
+                        chkSpecialist.DataValueField = "userId";
+                        chkSpecialist.DataTextField = "Name";
+                        chkSpecialist.DataSource = dsS;
+                        chkSpecialist.DataBind();
+                        chkSpecialist.SelectedValue = Session["UserId"].ToString();
+                    }
+                    chkCategory.Items.Add(new System.Web.UI.WebControls.ListItem("Goods", "1"));
+                    chkCategory.Items.Add(new System.Web.UI.WebControls.ListItem("Services", "2"));
+                    chkCategory.Items.Add(new System.Web.UI.WebControls.ListItem("Professional & Technical", "3"));
+                    chkCategory.Items.Add(new System.Web.UI.WebControls.ListItem("Construction", "4"));
+                    break;
+
+                case "3":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "4":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "5":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "6":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "NAIC Code";
+                    string qur = "EXEC [proc_getNAICCode]";
+                    DataSet ds = dbLibrary.idGetCustomResult(qur);
+                    if (ds != null)
+                    {
+                        chkSubMenu.DataValueField = "naicId";
+                        chkSubMenu.DataTextField = "naicCode";
+                        chkSubMenu.DataSource = ds;
+                        chkSubMenu.DataBind();
+                        LoadSecondaryTooltip();
+                    }
+                    break;
+
+                case "7":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "County";
+                    string qurCounty = "EXEC [proc_getCounty]";
+                    DataSet dsCounty = dbLibrary.idGetCustomResult(qurCounty);
+                    if (dsCounty != null)
+                    {
+                        chkSubMenu.DataValueField = "regionId";
+                        chkSubMenu.DataTextField = "region";
+                        chkSubMenu.DataSource = dsCounty;
+                        chkSubMenu.DataBind();
+                    }
+                    break;
+
+                case "8":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "Specialist";
+                    string qurSpecialist = "EXEC [proc_getUserList]";
+                    DataSet dsSpecialist = dbLibrary.idGetCustomResult(qurSpecialist);
+                    if (dsSpecialist != null)
+                    {
+                        chkSubMenu.DataValueField = "userId";
+                        chkSubMenu.DataTextField = "Name";
+                        chkSubMenu.DataSource = dsSpecialist;
+                        chkSubMenu.DataBind();
+                        chkSubMenu.SelectedValue = Session["UserId"].ToString();
+                    }
+                    break;
+
+                case "9":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:block;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "10":
+                    divSubMenu.Attributes.Add("style", "display:none;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    break;
+
+                case "11":
+                    divSubMenu.Attributes.Add("style", "display:block;margin-top:10px");
+                    divGross.Attributes.Add("style", "display:none;margin-top:10px");
+                    divSpecialist.Attributes.Add("style", "display:none;margin-top:10px");
+                    divCategory.Attributes.Add("style", "display:none;margin-top:10px");
+                    chkSubMenu.Items.Clear();
+                    lblSubMenu.Text = "Application Type";
+                    chkSubMenu.Items.Add(new System.Web.UI.WebControls.ListItem("Target Group", "1"));
+                    chkSubMenu.Items.Add(new System.Web.UI.WebControls.ListItem("Veteran", "2"));
+                    chkSubMenu.Items.Add(new System.Web.UI.WebControls.ListItem("Economically Disadvantaged Region", "3"));
+                    break;
+            }
+
+            lnkExport.Visible = false;
+            grdReport.DataSource = null;
+            grdReport.DataBind();
+            lblNoResult.Visible = false;
+        }
+        private void LoadSecondaryTooltip()
+        {
+            string qur = "EXEC [proc_getNAICCode]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds != null)
+            {
+                foreach (System.Web.UI.WebControls.ListItem li in chkSubMenu.Items)
+                {
+                    foreach (DataRow dr in ds.Tables[0].Rows)
+                    {
+                        if (li.Value == dr.ItemArray[0].ToString())
+                        {
+                            li.Attributes.Add("data-placement", "right");
+                            li.Attributes.Add("class", "tooltips");
+                            li.Attributes.Add("title", dr.ItemArray[2].ToString());
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        protected void btnGetReport_Click(object sender, EventArgs e)
+        {
+            lblNoResult.Visible = false;
+            lblError.Attributes.Add("style", "display:none");
+            if (ddlReportType.SelectedValue == "-1")
+            {
+                lblError.Attributes.Add("style", "display:block;color:red;");
+            }
+            else if (ddlReportType.SelectedValue == "1")
+            {
+                string qur = dbLibrary.idBuildQuery("[proc_getReportCategory]", txtFrom.Text.Trim(), txtTo.Text.Trim(), chkSubMenu.Items[0].Selected == true ? "Goods" : "Not Goods", chkSubMenu.Items[1].Selected == true ? "Service" : "Not Services", chkSubMenu.Items[2].Selected == true ? "Professional & Technical" : "Not PT", chkSubMenu.Items[3].Selected == true ? "Construction" : "Not Construction");
+                DataSet ds = dbLibrary.idGetCustomResult(qur);
+                if (ds.Tables[0].Rows.Count > 0)
+                { 
+                    ViewState["CatReport"] = ds;
+                    DataTable dtCategory = ds.Tables[0];
+                    grdReport.DataSource = ds;
+                    grdReport.DataBind();
+                    lnkExport.Visible = true;
+                }
+                else
+                {
+                    lblNoResult.Visible = true;
+                }
+            }
+            else if (ddlReportType.SelectedValue == "6")
+            {
+                DataTable NAICCodes = new DataTable();
+                NAICCodes.Columns.Add("NAICCode", typeof(string));
+                foreach (System.Web.UI.WebControls.ListItem li in chkSubMenu.Items)
+                {
+                    if(li.Selected == true)
+                    {
+                        DataRow row = NAICCodes.NewRow();
+                        row.SetField<string>("NAICCode", li.Text.ToString());
+                        NAICCodes.Rows.Add(row);
+                    }
+                }
+                DataSet ds = dbLibrary.idGetReportForTable("[proc_getReportNAICCodes]", NAICCodes, "@NAICCode", txtFrom.Text.Trim() == string.Empty ? "01/01/1900" : txtFrom.Text.Trim(), txtTo.Text.Trim() == string.Empty ? DateTime.Now.ToString("MM/dd/yyyy"): txtTo.Text.Trim());
+                if (ds.Tables[0].Rows.Count > 0)
+                {
+                    ViewState["CatReport"] = ds;
+                    DataTable dtCategory = ds.Tables[0];
+                    grdReport.DataSource = ds;
+                    grdReport.DataBind();
+                    lnkExport.Visible = true;
+                }
+                else
+                {
+                    lblNoResult.Visible = true;
+                }
+
+            }
+        }
+
+        private void ShowNAICCodeReport()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected void grdReport_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdReport.PageIndex = e.NewPageIndex;
+            grdReport.DataSource = (DataSet)ViewState["CatReport"];
+            grdReport.DataBind();
+        }
+
+        protected void lnkExport_Click(object sender, EventArgs e)
+        {
+            //Create a dummy GridView
+            GridView GridView1 = new GridView();
+            GridView1.AllowPaging = false;
+            DataSet report = (DataSet)ViewState["CatReport"];
+            report.Tables[0].Columns.Remove("vendorid");
+            report.AcceptChanges();
+            GridView1.DataSource = report;
+            GridView1.DataBind();
+            Response.Clear();
+            Response.Buffer = true;
+            Response.AddHeader("content-disposition",
+             "attachment;filename=GridViewExport.xls");
+            Response.Charset = "";
+            Response.ContentType = "application/vnd.ms-excel";
+            StringWriter sw = new StringWriter();
+            HtmlTextWriter hw = new HtmlTextWriter(sw);
+
+            for (int i = 0; i < GridView1.Rows.Count; i++)
+            {
+                //Apply text style to each Row
+                GridView1.Rows[i].Attributes.Add("class", "textmode");
+            }
+            GridView1.RenderControl(hw);
+
+            //style to format numbers to string
+            string style = @"<style> .textmode { mso-number-format:\@; } </style>";
+            Response.Write(style);
+            Response.Output.Write(sw.ToString());
+            Response.Flush();
+            Response.End();
+        }
+    }
+}

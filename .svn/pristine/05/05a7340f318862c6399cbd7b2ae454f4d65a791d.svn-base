@@ -1,0 +1,47 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrMaster : System.Web.UI.MasterPage
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            else
+            {
+                if (!IsPostBack)
+                {
+                    string qur = "Select firstName from Login where userId='" + Session["UserId"].ToString() + "'";
+                    string username = dbLibrary.idGetAFieldByQuery(qur);
+                    bool isAdmin = bool.Parse(Session["isAdmin"].ToString());
+                    if (isAdmin)
+                    {
+                        lnkAdminPanel.Visible = true;
+                    }
+                    else
+                    {
+                        lnkAdminPanel.Visible = false;
+                    }
+                    lblName.Text = "Hi " + username;
+                }
+            }
+        }
+        protected void btnLogout_Click(object sender, EventArgs e)
+        {
+            Session.Clear();
+
+            Response.Redirect("~/Logout.aspx");
+        }
+    }
+
+}

@@ -1,0 +1,175 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="vmpAdmMaster.master.cs" Inherits="VMP_1._0.Admin.vmpAdmMaster" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>VMP</title>
+     <script type="text/javascript">
+        history.pushState(null, null, document.URL);
+        window.addEventListener('popstate', function () {
+            history.pushState(null, null, document.URL);
+        });
+    </script>
+    <script src="../Scripts/jquery-1.10.2.js"></script>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="../Content/bootstrap.css" rel="stylesheet" />
+    <%-- <link href="Content/bootstrap-min-navbar.css" rel="stylesheet" />--%>
+    <style class="cp-pen-styles">
+        /* latin-ext */
+        ::-webkit-input-placeholder {
+            font-style: italic;
+        }
+
+        ::-moz-placeholder {
+            font-style: italic;
+        }
+
+        @font-face {
+            font-family: 'Lato';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Lato Regular'), local('Lato-Regular'), url(http://fonts.gstatic.com/s/lato/v13/UyBMtLsHKBKXelqf4x7VRQ.woff2) format('woff2');
+            unicode-range: U+0100-024F, U+1E00-1EFF, U+20A0-20AB, U+20AD-20CF, U+2C60-2C7F, U+A720-A7FF;
+        }
+        /* latin */
+        @font-face {
+            font-family: 'Lato';
+            font-style: normal;
+            font-weight: 400;
+            src: local('Lato Regular'), local('Lato-Regular'), url(http://fonts.gstatic.com/s/lato/v13/1YwB1sO8YE1Lyjf12WNiUA.woff2) format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;
+        }
+
+        .navbar-brand {
+            padding: 0px;
+            margin: 0px 20px 0px 10px;
+        }
+
+        /*.navbar-brand > img {
+                margin: 0px 20px 0px 10px;
+            }*/
+        /* EXAMPLE 9 - Center with Flexbox and Text*/
+        .brand-centered {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
+        }
+
+            .brand-centered .navbar-brand {
+                display: -webkit-box;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-box-align: center;
+                -ms-flex-align: center;
+                align-items: center;
+            }
+
+        .navbar-toggle {
+            z-index: 1;
+        }
+        /* CSS Transform Align Navbar Brand Text ... This could also be achieved with table / table-cells */
+        .navbar-alignit .navbar-header {
+            -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
+            height: 50px;
+        }
+
+        .navbar-alignit .navbar-brand {
+            top: 50%;
+            display: block;
+            position: relative;
+            height: auto;
+            -webkit-transform: translate(0,-50%);
+            transform: translate(0,-50%);
+            margin-right: 15px;
+            margin-left: 15px;
+        }
+
+        .navbar-nav > li > .dropdown-menu {
+            z-index: 9999;
+        }
+
+        .logout {
+            color: #555;
+            font-size: 14px;
+        }
+
+            .logout:hover {
+                background-color: lightgrey !important;
+                color: black !important;
+                display: block !important;
+            }
+
+        body {
+            font-family: "Lato";
+        }
+    </style>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div>
+            <div>
+                <nav class="navbar navbar-default">
+                    <div class="container-fluid">
+                        <div class="navbar-header">
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar7">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                            </button>
+                            <img class="navbar-brand" src="../images/Logo.ico" alt="Vendor Management" />
+                        </div>
+                        <div id="navbar7" class="navbar-collapse collapse">
+                            <ul class="nav navbar-nav navbar-left">
+                                <li id="home" class="active"><a href="vmpAdmHome.aspx">Home</a></li>
+                                <li id="menu" class="dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Menu <span class="caret"></span></a>
+                                    <ul class="dropdown-menu" role="menu">
+                                        <li><a href="vmpAdmUsers.aspx">Create User</a></li>
+                                        <li><a href="vmpAdmRegion.aspx">Manage Region Classification</a></li>
+                                        <li><a href="vmpAdmNaic.aspx">Manage NAIC Codes</a></li>
+                                        <li class="divider"></li>
+                                       <%-- <li class="dropdown-header">Nav header</li>--%>
+                                        <li><a href="vmpAdmRules.aspx">Rules</a></li>
+                                        <li><a href="#">One more separated link</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <ul class="nav navbar-nav navbar-right">
+                                <li>
+                                    <asp:LinkButton ID="lnkAdminPanel" runat="server" CssClass="btn btn-sm logout" PostBackUrl="~/User/vmpUsrHome.aspx">Back to VMP
+                                    </asp:LinkButton>
+                                </li>
+                                <li>
+                                    <asp:Label ID="lblName" runat="server" Style="display: block;padding: 15px;"></asp:Label>
+                                </li>
+                                <li>
+                                    <asp:LinkButton ID="btnLogout" runat="server" CssClass="btn btn-sm logout" OnClick="btnLogout_Click"> 
+                        <span aria-hidden="true" class="glyphicon glyphicon-off"></span> Logout
+                                    </asp:LinkButton></li>
+                            </ul>
+                        </div>
+                        <!--/.nav-collapse -->
+                    </div>
+                    <!--/.container-fluid -->
+                </nav>
+            </div>
+            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+            </asp:ContentPlaceHolder>
+        </div>
+    </form>
+</body>
+</html>

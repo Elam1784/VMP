@@ -1,0 +1,356 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/vmpUsrMaster.Master" AutoEventWireup="true" CodeBehind="manageVendor.aspx.cs" Inherits="VMP_1._0.User.manageVendor" EnableEventValidation="false" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    <style>
+        label {
+            font-weight: normal;
+        }
+
+        .grid td, .grid th {
+            text-align: center !important;
+        }
+    </style>
+
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
+    <div class="container" style="background-color: gainsboro; border-radius: 6px;">
+        <div class="row" style="text-align: center">
+            <h3>Manage Vendor</h3>
+        </div>
+        <br />
+        <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+            <ContentTemplate>
+                <div class="row" style="border-style: ridge;">
+                    <div class="col-md-12">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-2">
+                            <h5 style="margin-top: 5px !important;"><b>Search By</b></h5>
+                        </div>
+                        <div class="col-md-9" style="border-style: ridge;">
+                            <div class="col-md-4">
+                                <asp:RadioButton ID="radSearchVN" runat="server" Text="Vendor Name" GroupName="s" Checked="true" OnCheckedChanged="radSearchVN_CheckedChanged" AutoPostBack="true" />
+                            </div>
+                            <div class="col-md-4">
+                                <asp:RadioButton ID="radSearchSpecialist" runat="server" Text="Specialist" GroupName="s" OnCheckedChanged="radSearchSpecialist_CheckedChanged" AutoPostBack="true" />
+                            </div>
+                            <div class="col-md-4">
+                                <asp:RadioButton ID="radSearchLName" runat="server" Text="Primary Owner Lastname" GroupName="s" OnCheckedChanged="radSearchLName_CheckedChanged" AutoPostBack="true" />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-3" id="divSearchV" runat="server">
+                        <div class="col-md-12">
+                            <asp:TextBox ID="txtSearch" runat="server" CssClass="form-control" placeholder="Vendor Name" Style="margin-bottom: 5px" ValidationGroup="g"></asp:TextBox>
+                        </div>
+                        <div class="col-md-12">
+                            <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ForeColor="Red" ErrorMessage="Field Cannot be Empty" ControlToValidate="txtSearch" ValidationGroup="g"></asp:RequiredFieldValidator>
+                        </div>
+                    </div>
+                    <div class="col-md-3" id="divSearchS" runat="server" style="display: none;">
+                        <asp:DropDownList ID="ddlSpecialist" runat="server" CssClass="form-control" Style="margin-bottom: 5px"></asp:DropDownList>
+                    </div>
+                    <div class="col-md-2">
+                        <asp:Button ID="btnSearch" runat="server" CssClass="btn btn-primary" Text="Search" OnClick="btnSearch_Click" ValidationGroup="g" />
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-8">
+                        <asp:GridView ID="grdSearchResult" runat="server" DataKeyNames="vendorId" CssClass="grid" AllowSorting="true" AllowPaging="true" PageSize="10" OnRowDataBound="grdSearchResult_RowDataBound" OnSelectedIndexChanged="grdSearchResult_SelectedIndexChanged" AutoGenerateColumns="false" HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-BorderColor="White" HeaderStyle-ForeColor="White" Style="width: 100%; text-align: center; margin-bottom: 10px;" BackColor="White" EmptyDataRowStyle-BorderColor="White" OnPageIndexChanging="grdSearchResult_PageIndexChanging">
+                            <Columns>
+                                <asp:BoundField DataField="vendorName" HeaderText="Vendor" HeaderStyle-HorizontalAlign="Center" />
+                                <asp:BoundField DataField="specialistName" HeaderText="Specialist" HeaderStyle-HorizontalAlign="Center" />
+                                <asp:BoundField DataField="primaryOwner" HeaderText="Primary Owner" HeaderStyle-HorizontalAlign="Center" />
+                            </Columns>
+                            <EmptyDataTemplate>
+                                <label style="color: red;">No Data Found</label>
+                            </EmptyDataTemplate>
+                        </asp:GridView>
+                    </div>
+                    <div class="col-md-2"></div>
+                </div>
+                <br />
+                <div class="row" id="divButtons" runat="server" style="display: none;">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4" style="text-align: center">
+                        <asp:Button ID="btnEdit" runat="server" Text="View/Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" Style="margin-bottom: 5px;" />
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+                <br />
+                <div class="row" id="divAccordions" runat="server" style="display: none;">
+                    <div class="col-md-12">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-10">
+                            <div class="panel-group" id="accordionStatus">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <a data-toggle="collapse" data-parent="#accordionLog" href="#collapseStatus">
+                                            <h4 class="panel-title">Status</h4>
+                                        </a>
+                                    </div>
+                                    <div id="collapseStatus" class="panel-collapse collapse">
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <h5 id="vendorNameStatus" runat="server" style="float: left; text-decoration: underline; font-weight: bold; font-style: italic" class="col-md-offset-1"></h5>
+                                                    </div>
+                                                </div>
+                                                <br />
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="col-md-6" style="border-right-style: ridge">
+                                                            <div class="col-md-12" style="text-align: center">
+                                                                <label><b>Category</b></label>
+                                                            </div>
+                                                            <br />
+                                                            <div class="col-md-12">
+                                                                <div class="row" style="margin-bottom: 5px; border-bottom-style: inset;">
+                                                                    <div class="col-md-4">
+                                                                    </div>
+                                                                    <div class="col-md-8">
+                                                                        <div class="col-md-12">
+                                                                            <asp:CheckBox ID="chkCitizen" runat="server" Text="Citizen/Permanent Resident" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row" style="margin-bottom: 5px;">
+                                                                    <div class="col-md-4">
+                                                                        <label>Target Group</label>
+                                                                    </div>
+                                                                    <div class="col-md-8">
+                                                                        <div class="col-md-12">
+                                                                            <asp:CheckBoxList ID="chkbxTargetGroup" runat="server">
+                                                                                <asp:ListItem>Asian/Pacific</asp:ListItem>
+                                                                                <asp:ListItem>Black</asp:ListItem>
+                                                                                <asp:ListItem>Hispanic</asp:ListItem>
+                                                                                <asp:ListItem>Indiginess American</asp:ListItem>
+
+                                                                            </asp:CheckBoxList>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row" style="margin-bottom: 5px; display: none;" runat="server" id="divIndiginess">
+                                                                    <div class="col-md-4">
+                                                                    </div>
+                                                                    <div class="col-md-8">
+                                                                        <div class="col-md-12">
+                                                                            <asp:CheckBoxList ID="chkIndiginess" runat="server">
+                                                                                <asp:ListItem>Aluets/Eskimos</asp:ListItem>
+                                                                                <asp:ListItem>Native Hawaiians</asp:ListItem>
+                                                                                <asp:ListItem>American Indian</asp:ListItem>
+                                                                            </asp:CheckBoxList>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row" style="margin-bottom: 5px; display: none;" id="divTribal" runat="server">
+                                                                    <div class="col-md-4">
+                                                                        <label>Tribal ID</label>
+                                                                    </div>
+                                                                    <div class="col-md-7">
+                                                                        <asp:Label ID="lblTribalID" runat="server" Style="margin-left: 14px;"></asp:Label>
+                                                                        <%--<asp:TextBox ID="txtTribalID" runat="server" CssClass="form-control" MaxLength="16" ></asp:TextBox>--%>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row" style="margin-bottom: 5px; border-bottom-style: inset;">
+                                                                    <div class="col-md-4">
+                                                                    </div>
+                                                                    <div class="col-md-8">
+                                                                        <div class="col-md-12">
+                                                                            <asp:CheckBoxList ID="chkTG1" runat="server" AutoPostBack="true">
+                                                                                <asp:ListItem>Physical Disability</asp:ListItem>
+                                                                                <asp:ListItem>Woman</asp:ListItem>
+                                                                            </asp:CheckBoxList>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row" style="margin-bottom: 5px; border-bottom-style: inset;">
+                                                                    <div class="col-md-4">
+                                                                        <label>Veterans</label>
+                                                                    </div>
+                                                                    <div class="col-md-8">
+                                                                        <div class="col-md-12">
+                                                                            <asp:RadioButtonList ID="radVeteran" runat="server">
+                                                                                <asp:ListItem>Veteran</asp:ListItem>
+                                                                                <asp:ListItem>Service Disabled Veteran</asp:ListItem>
+                                                                            </asp:RadioButtonList>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="col-md-12" style="text-align: center">
+                                                                <label><b>Certification Dates</b></label>
+                                                            </div>
+                                                            <br />
+                                                            <div class="row">
+                                                                <div class="row" style="margin-bottom: 5px">
+                                                                    <div class="col-md-4"></div>
+                                                                    <div class="col-md-8">
+                                                                        <div class="col-md-2">
+                                                                            <label>Orig:</label>
+                                                                        </div>
+                                                                        <div class="col-md-10">
+                                                                            <asp:Label ID="lblOrig" runat="server" Text="Not Found" Style="color: red;"></asp:Label>
+                                                                            <%--<asp:TextBox ID="txtOrig" runat="server" CssClass="form-control"></asp:TextBox>--%>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row" style="margin-bottom: 5px">
+                                                                    <div class="col-md-4"></div>
+                                                                    <div class="col-md-8">
+                                                                        <div class="col-md-2">
+                                                                            <label>Last:</label>
+                                                                        </div>
+                                                                        <div class="col-md-10">
+                                                                            <asp:Label ID="lblLast" runat="server" Text="Not Found" Style="color: red;"></asp:Label>
+                                                                            <%--<asp:TextBox ID="txtLast" runat="server" CssClass="form-control"></asp:TextBox>--%>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row">
+                                                                    <div class="col-md-4"></div>
+                                                                    <div class="col-md-8">
+                                                                        <div class="col-md-2">
+                                                                            <label>Next:</label>
+                                                                        </div>
+                                                                        <div class="col-md-10">
+                                                                            <asp:Label ID="lblNext" runat="server" Text="Not Found" Style="color: red;"></asp:Label>
+                                                                            <%--<asp:TextBox ID="txtNext" runat="server" CssClass="form-control"></asp:TextBox>--%>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <br />
+                                                            <br />
+                                                            <div class="col-md-12" style="text-align: center">
+                                                                <label><b>Status</b></label>
+                                                            </div>
+                                                            <div class="col-md-12 col-md-offset-4">
+                                                                <asp:RadioButtonList ID="radbutStatus" runat="server">
+                                                                    <asp:ListItem>Approved</asp:ListItem>
+                                                                    <asp:ListItem>Denied</asp:ListItem>
+                                                                    <asp:ListItem>Pending</asp:ListItem>
+                                                                    <asp:ListItem>Removed</asp:ListItem>
+                                                                </asp:RadioButtonList>
+                                                            </div>
+                                                            <br />
+                                                            <div class="col-md-12" style="text-align: center">
+                                                                <label><b>Designation</b></label>
+                                                            </div>
+                                                            <div class="col-md-12" style="text-align: center">
+                                                                <div class="col-md-2"></div>
+                                                                <div class="col-md-8">
+                                                                    <%--<asp:TextBox ID="txtDesignation" runat="server" CssClass="form-control"></asp:TextBox>--%>
+                                                                    <asp:Label ID="lblDesignation" runat="server"></asp:Label>
+                                                                </div>
+                                                                <div class="col-md-2"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <br />
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="col-md-6" style="border-right-style: ridge;">
+                                                            <div class="col-md-12" style="text-align: center">
+                                                                <label><b>Economically Disadvantaged Region</b></label>
+                                                            </div>
+                                                            <div class="col-md-12">
+                                                                <div class="col-md-2"></div>
+                                                                <div class="col-md-8">
+                                                                    <asp:CheckBoxList ID="chkEDR" CssClass="checkbox" runat="server"></asp:CheckBoxList>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="row">
+                                                                <div class="col-md-12">
+                                                                    <label>Information Pending</label>
+                                                                </div>
+                                                                <div class="col-md-12">
+                                                                    <asp:TextBox ID="txtInfoPending" runat="server" TextMode="MultiLine" CssClass="form-control"  Rows="4"></asp:TextBox>
+                                                                    </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <asp:UpdatePanel ID="updpnlLog" runat="server">
+                                <ContentTemplate>
+                                    <div class="panel-group" id="accordionLog" style="margin-top: 5px;">
+                                        <div class="panel panel-default">
+
+                                            <div class="panel-heading">
+                                                <a data-toggle="collapse" data-parent="#accordionStatus" href="#<%=collapseLog.ClientID%>">
+                                                    <h4 class="panel-title">Log</h4>
+                                                </a>
+                                            </div>
+                                            <div id="collapseLog" runat="server" class="panel-collapse collapse">
+                                                <div class="panel-body">
+                                                    <div class="row">
+                                                        <div class="row">
+                                                            <div class="col-md-12">
+                                                                <h5 id="vendorNameLog" runat="server" style="float: left" class="col-md-offset-1"></h5>
+                                                            </div>
+                                                        </div>
+                                                        <br />
+                                                        <div class="row">
+                                                            <div class="col-md-12">
+                                                                <div class="col-md-2"></div>
+                                                                <div class="col-md-8">
+
+                                                                    <asp:GridView ID="grdVLog" runat="server" AllowPaging="true" PageSize="10" OnPageIndexChanging="grdVLog_PageIndexChanging" CssClass="grid" AutoGenerateColumns="false" HeaderStyle-Font-Bold="true" HeaderStyle-BackColor="Gray" HeaderStyle-ForeColor="White" Style="width: 100%; text-align: center; margin-bottom: 10px;" EmptyDataRowStyle-BorderColor="White">
+                                                                        <Columns>
+                                                                            <asp:BoundField DataField="Specialist" HeaderText="Specialist" HeaderStyle-HorizontalAlign="Center" />
+                                                                            <asp:BoundField DataField="activity" HeaderText="Activity" HeaderStyle-HorizontalAlign="Center" />
+                                                                            <asp:BoundField DataField="actDateTime" HeaderText="Date Time" HeaderStyle-HorizontalAlign="Center" />
+                                                                        </Columns>
+                                                                        <EmptyDataTemplate>
+                                                                            <label style="color: red;">No Data Found</label>
+                                                                        </EmptyDataTemplate>
+                                                                    </asp:GridView>
+
+                                                                </div>
+                                                                <div class="col-md-2"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </ContentTemplate>
+                            </asp:UpdatePanel>
+                        </div>
+                        <div class="col-md-1"></div>
+                    </div>
+                </div>
+            </ContentTemplate>
+        </asp:UpdatePanel>
+        <br />
+        <br />
+    </div>
+    <script>
+        $(document).ready(function () {
+            $("#navbar7 li").removeClass("active");//this will remove the active class from  
+            $('#menu').addClass('active');
+        });
+    </script>
+</asp:Content>

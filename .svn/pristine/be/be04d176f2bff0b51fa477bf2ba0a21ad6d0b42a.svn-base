@@ -1,0 +1,138 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.Admin
+{
+    public partial class vmpAdmNaic : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                MultiViewNAIC.SetActiveView(viewMNC);
+                loadNAICCodes();
+            }
+        }
+
+        //protected void lnkbtnAddNC_Click(object sender, EventArgs e)
+        //{
+        //    liANC.Attributes.Add("class", "active");
+        //    liMNC.Attributes["class"] = "";
+        //    MultiViewNAIC.SetActiveView(viewANC);
+        //}
+
+        //protected void lnkbtnManageNC_Click(object sender, EventArgs e)
+        //{
+        //    liANC.Attributes["class"] = "";
+        //    liMNC.Attributes.Add("class", "active");
+        //    MultiViewNAIC.SetActiveView(viewMNC);
+        //}
+
+        protected void ddlPNAIC_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string qur = "Select * from NAICCodes where naicCode ='" + ddlPNAIC.SelectedItem.Text + "'";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                btnUpdate.Visible = true;
+                txtSbsl.Text = ds.Tables[0].Rows[0]["smallBusinessLimit"].ToString();
+                txtFullDescription.Text = ds.Tables[0].Rows[0]["orginalDesc"].ToString();
+                if (ds.Tables[0].Rows[0]["naicCodeDesc"].ToString() == "NOT IN USE AT THIS TIME")
+                {
+                    chkNIU.Checked = true;
+                }
+                else
+                {
+                    chkNIU.Checked = false;
+                }
+                ddlSClassification.SelectedValue = ds.Tables[0].Rows[0]["supplierClassification"].ToString();
+            }
+            else
+            {
+                btnUpdate.Visible = false;
+            }
+            LoadPrimarytooltip();
+        }
+
+        private void LoadPrimarytooltip()
+        {
+            string qur = "EXEC [proc_getNAICCode]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                foreach (ListItem li in ddlPNAIC.Items)
+                {
+                    if (li.Value == "-1")
+                    {
+                        continue;
+                    }
+                    foreach (DataRow dr in ds.Tables[0].Rows)
+                    {
+                        if (li.Value == dr.ItemArray[0].ToString())
+                        {
+                            //li.Attributes.Add("data-placement", "right");
+                            //li.Attributes.Add("class", "tooltips");
+                            li.Attributes.Add("title", dr.ItemArray[2].ToString());
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private void loadNAICCodes()
+        {
+            string qur = "EXEC [proc_getNAICCode]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                //Primary NAIC Code
+                ddlPNAIC.DataValueField = "naicId";
+                ddlPNAIC.DataTextField = "naicCode";
+                ddlPNAIC.DataSource = ds;
+                ddlPNAIC.DataBind();
+                ddlPNAIC.Items.Insert(0, new ListItem("--Select--", "-1"));
+                ddlPNAIC.SelectedValue = "-1";
+                LoadPrimarytooltip();
+            }
+        }
+
+        protected void btnUpdate_Click(object sender, EventArgs e)
+        {
+            if (txtSbsl.Text != string.Empty && txtFullDescription.Text != string.Empty && ddlSClassification.SelectedValue != "-1")
+            {
+                lblErrorU.Visible = false;
+                if (chkNIU.Checked)
+                {
+                    dbLibrary.idUpdateTable("NAICCodes",
+               "naicId='" + ddlPNAIC.SelectedValue + "'",
+               "smallBusinessLimit", txtSbsl.Text.Trim(),
+               "naicCodeDesc", chkNIU.Checked == true ? chkNIU.Text : txtFullDescription.Text,
+               "supplierClassification", ddlSClassification.SelectedValue);
+                }
+                else
+                {
+                    dbLibrary.idUpdateTable("NAICCodes",
+               "naicId='" + ddlPNAIC.SelectedValue + "'",
+               "smallBusinessLimit", txtSbsl.Text.Trim(),
+               "naicCodeDesc", chkNIU.Checked == true ? chkNIU.Text : txtFullDescription.Text,
+               "orginalDesc", txtFullDescription.Text,
+               "supplierClassification", ddlSClassification.SelectedValue);
+                }
+                ScriptManager.RegisterStartupScript(this, this.GetType(), "CallMyFunction1", "runEffect1()", true);
+            }
+            else
+            {
+                lblErrorU.Visible = true;
+            }
+
+        }
+    }
+}

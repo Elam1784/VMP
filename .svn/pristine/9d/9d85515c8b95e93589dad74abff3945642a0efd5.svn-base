@@ -1,0 +1,333 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class manageVendor : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                loadEDR();
+            }
+        }
+
+        private void loadEDR()
+        {
+            string qur = "EXEC [proc_getEDR]";
+            DataSet dsEDR = dbLibrary.idGetCustomResult(qur);
+            if (dsEDR != null)
+            {
+                chkEDR.DataValueField = "ClassificationId";
+                chkEDR.DataTextField = "ClassificationDesc";
+                chkEDR.DataSource = dsEDR;
+                chkEDR.DataBind();
+            }
+        }
+
+        private void loadSpecialist()
+        {
+            string qur = "Exec [proc_getUserList]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            ddlSpecialist.DataSource = ds;
+            ddlSpecialist.DataTextField = "Name";
+            ddlSpecialist.DataValueField = "userId";
+            ddlSpecialist.DataBind();
+        }
+
+        protected void radSearchVN_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radSearchVN.Checked)
+            {
+                divSearchV.Attributes.Add("style", "display:block");
+                divSearchS.Attributes.Add("style", "display:none");
+                txtSearch.Attributes.Add("Placeholder", "Vendor Name");
+                RequiredFieldValidator1.ValidationGroup = "g";
+            }
+            else
+            {
+                divSearchV.Attributes.Add("style", "display:none");
+                divSearchS.Attributes.Add("style", "display:block");
+            }
+            grdSearchResult.Visible = false;
+            divButtons.Attributes.Add("style", "display:none");
+            divAccordions.Attributes.Add("style", "display:none");
+        }
+
+        protected void radSearchSpecialist_CheckedChanged(object sender, EventArgs e)
+        {
+            loadSpecialist();
+            if (radSearchSpecialist.Checked)
+            {
+                divSearchS.Attributes.Add("style", "display:block");
+                divSearchV.Attributes.Add("style", "display:none");
+                RequiredFieldValidator1.ValidationGroup = "h";
+                ddlSpecialist.SelectedValue = Session["UserId"].ToString();
+            }
+            else
+            {
+                divSearchS.Attributes.Add("style", "display:none");
+                divSearchV.Attributes.Add("style", "display:block");
+            }
+            grdSearchResult.Visible = false;
+            divButtons.Attributes.Add("style", "display:none");
+            divAccordions.Attributes.Add("style", "display:none");
+        }
+
+        protected void radSearchLName_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radSearchLName.Checked)
+            {
+                divSearchV.Attributes.Add("style", "display:block");
+                divSearchS.Attributes.Add("style", "display:none");
+                txtSearch.Attributes.Add("Placeholder", "Specialist Name");
+                RequiredFieldValidator1.ValidationGroup = "g";
+            }
+            else
+            {
+                divSearchV.Attributes.Add("style", "display:none");
+                divSearchS.Attributes.Add("style", "display:block");
+            }
+            grdSearchResult.Visible = false;
+            divButtons.Attributes.Add("style", "display:none");
+            divAccordions.Attributes.Add("style", "display:none");
+        }
+
+        protected void btnSearch_Click(object sender, EventArgs e)
+        {
+            string searchby = string.Empty;
+            string criteria = string.Empty;
+            if (radSearchVN.Checked)
+            {
+                searchby = "vendorName";
+                criteria = txtSearch.Text;
+            }
+            else if (radSearchSpecialist.Checked)
+            {
+                searchby = "specialistName";
+                criteria = ddlSpecialist.SelectedValue;
+            }
+            else if (radSearchLName.Checked)
+            {
+                searchby = "primaryOwner";
+                criteria = txtSearch.Text;
+            }
+
+            string qur = dbLibrary.idBuildQuery("[proc_getSearchResult]", searchby, criteria);
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            if (ds != null)
+            {
+                grdSearchResult.DataSource = ds;
+                grdSearchResult.DataBind();
+                grdSearchResult.Visible = true;
+                ViewState["gridData"] = ds;
+            }
+            divButtons.Attributes.Add("style", "display:none");
+            divAccordions.Attributes.Add("style", "display:none");
+        }
+
+        protected void grdSearchResult_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {
+                e.Row.Attributes["onmouseover"] = "this.style.cursor='pointer';this.style.textDecoration='underline';";
+                e.Row.Attributes["onmouseout"] = "this.style.textDecoration='none';";
+                e.Row.Attributes["onclick"] = Page.ClientScript.GetPostBackClientHyperlink(grdSearchResult, "Select$" + e.Row.RowIndex);
+                e.Row.ToolTip = "Click to select this row.";
+            }
+        }
+
+        protected void grdSearchResult_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            foreach (GridViewRow row in grdSearchResult.Rows)
+            {
+                if (row.RowIndex == grdSearchResult.SelectedIndex)
+                {
+                    row.BackColor = ColorTranslator.FromHtml("#6192d3");
+                    row.ForeColor = Color.White;
+                    row.ToolTip = string.Empty;
+                    btnEdit.CommandArgument = grdSearchResult.SelectedDataKey.Value.ToString();
+                    divButtons.Attributes.Add("style", "display:block");
+                    divAccordions.Attributes.Add("style", "display:block");
+
+                    // Load Log
+                    string qur = dbLibrary.idBuildQuery("[proc_getVendorLog]", grdSearchResult.SelectedDataKey.Value.ToString());
+                    DataSet ds = dbLibrary.idGetCustomResult(qur);
+                    if (ds != null)
+                    {
+                        if (ds.Tables[0].Rows.Count > 0)
+                        {
+                            vendorNameLog.InnerText = ds.Tables[0].Rows[0]["vendorName"].ToString();
+                            vendorNameStatus.InnerText = ds.Tables[0].Rows[0]["vendorName"].ToString();
+                        }
+                        grdVLog.DataSource = ds;
+                        grdVLog.DataBind();
+                        ViewState["log"] = ds;
+                    }
+
+                    //Load Status
+                    DataSet dsParameters = (DataSet)ViewState["gridData"];
+                    qur = dbLibrary.idBuildQuery("[proc_getStatus]", dsParameters.Tables[0].Rows[grdSearchResult.SelectedIndex]["ownerID"].ToString(), dsParameters.Tables[0].Rows[grdSearchResult.SelectedIndex]["regionId"].ToString());
+                    DataSet dsStatus = dbLibrary.idGetCustomResult(qur);
+                    if (dsStatus != null)
+                    {
+                        if (dsStatus.Tables[0].Rows.Count > 0)
+                        {
+                            if ((bool)dsStatus.Tables[0].Rows[0]["citizen"] == true)
+                            {
+                                chkCitizen.Checked = true;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["asian"] == true)
+                            {
+                                chkbxTargetGroup.Items[0].Selected = true;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["black"] == true)
+                            {
+                                chkbxTargetGroup.Items[1].Selected = true;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["hispanic"] == true)
+                            {
+                                chkbxTargetGroup.Items[2].Selected = true;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["indiginessAmerican"] == true)
+                            {
+                                chkbxTargetGroup.Items[3].Selected = true;
+                                divIndiginess.Attributes.Add("style", "display:block");
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["alaskan"] == true)
+                            {
+                                chkIndiginess.Items[0].Selected = true;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["hawaiinNative"] == true)
+                            {
+                                chkIndiginess.Items[1].Selected = true;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["americanIndian"] == true)
+                            {
+                                chkIndiginess.Items[2].Selected = true;
+                                divTribal.Attributes.Add("style", "display:block");
+                                lblTribalID.Text = dsStatus.Tables[0].Rows[0]["tribalID"].ToString();
+
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["physicallyDisabled"] == true)
+                            {
+                                chkTG1.Items[0].Selected = true;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["woman"] == true)
+                            {
+                                chkTG1.Items[1].Selected = true;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["veteran"] == true)
+                            {
+                                radVeteran.Items[0].Selected = true;
+                            }
+                            else
+                            {
+                                radVeteran.Items[0].Selected = false;
+                            }
+                            if ((bool)dsStatus.Tables[0].Rows[0]["serviceDisabled"] == true)
+                            {
+                                radVeteran.Items[1].Selected = true;
+                            }
+                            else
+                            {
+                                radVeteran.Items[1].Selected = false;
+                            }
+                            DisableAll();
+                        }
+                        else
+                        {
+                            chkCitizen.Checked = false;
+                            chkbxTargetGroup.SelectedIndex = -1;
+                            chkIndiginess.SelectedIndex = -1;
+                            chkTG1.SelectedIndex = -1;
+                            radVeteran.SelectedIndex = -1;
+                            lblTribalID.Text = "";
+                            DisableAll();
+                            divIndiginess.Attributes.Add("style", "display:none");
+                            divTribal.Attributes.Add("style", "display:none");
+                        }
+                        if (dsStatus.Tables[1].Rows.Count > 0)
+                        {
+                            foreach (DataRow r in dsStatus.Tables[1].Rows)
+                            {
+                                foreach (ListItem li in chkEDR.Items)
+                                {
+                                    if (li.Value == r.ToString())
+                                    {
+                                        li.Selected = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    row.BackColor = ColorTranslator.FromHtml("#FFFFFF");
+                    row.ForeColor = Color.Black;
+                    row.ToolTip = "Click to select this row.";
+                }
+            }
+        }
+
+        private void DisableAll()
+        {
+            foreach (ListItem li in chkEDR.Items)
+            {
+                li.Enabled = false;
+            }
+            chkCitizen.Enabled = false;
+            chkbxTargetGroup.Items[0].Enabled = false;
+            chkbxTargetGroup.Items[1].Enabled = false;
+            chkbxTargetGroup.Items[2].Enabled = false;
+            chkbxTargetGroup.Items[3].Enabled = false;
+            chkIndiginess.Items[0].Enabled = false;
+            chkIndiginess.Items[1].Enabled = false;
+            chkIndiginess.Items[2].Enabled = false;
+            chkTG1.Items[0].Enabled = false;
+            chkTG1.Items[1].Enabled = false;
+            radVeteran.Items[0].Enabled = false;
+            radVeteran.Items[0].Enabled = false;
+            radVeteran.Items[1].Enabled = false;
+            radVeteran.Items[1].Enabled = false;
+            radbutStatus.SelectedIndex = -1;
+            radbutStatus.Enabled = false;
+               
+        }
+
+        protected void grdSearchResult_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdSearchResult.PageIndex = e.NewPageIndex;
+            grdSearchResult.DataSource = (DataSet)ViewState["log"];
+            grdSearchResult.DataBind();
+        }
+
+        protected void btnEdit_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor1.aspx?VId=" + btnEdit.CommandArgument + "&EditMode=True");
+        }
+
+        protected void grdVLog_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            grdVLog.PageIndex = e.NewPageIndex;
+            grdVLog.DataSource = (DataSet)ViewState["log"];
+            grdVLog.DataBind();
+            collapseLog.Attributes.Add("class", "panel-collapse collapse in");
+            collapseLog.Attributes.Remove("style");
+            collapseLog.Attributes.Add("aria-expanded", "true");
+        }
+    }
+}

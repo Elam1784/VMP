@@ -1,0 +1,43 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.Admin
+{
+    public partial class vmpAdmMaster : System.Web.UI.MasterPage
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                if (Session["UserId"] == null)
+                {
+                    Response.Redirect("~/Login.aspx");
+                }
+                else
+                {
+                    if (bool.Parse(this.Session["isAdmin"].ToString()))
+                    {
+                        string qur = "Select firstName from Login where userId='" + Session["UserId"].ToString() + "'";
+                        string username = dbLibrary.idGetAFieldByQuery(qur);
+                        lblName.Text = "Hi " + username;
+                    }
+                    else
+                    {
+                        Response.Redirect("~/AccessDenied.aspx");
+                    }
+                }
+            }
+        }
+
+        protected void btnLogout_Click(object sender, EventArgs e)
+        {
+            Session.Clear();
+            Response.Redirect("~/Logout.aspx");
+        }
+    }
+}

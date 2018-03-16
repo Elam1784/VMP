@@ -1,0 +1,82 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/vmpUsrMaster.Master" AutoEventWireup="true" CodeBehind="vmpUsrHome.aspx.cs" Inherits="VMP_1._0.User.vmpUsrHome" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <asp:HiddenField ID="hdnPT" runat="server" Value="0" />
+    <asp:HiddenField ID="hdnGoods" runat="server" Value="0" />
+    <asp:HiddenField ID="hdnConstruction" runat="server" Value="0" />
+    <asp:HiddenField ID="hdnServices" runat="server" Value="0" />
+    <div style="display: none; text-align: center" id="myMessage" runat="server" class="alert alert-success col-sm-12">
+        <asp:Label ID="lblError" runat="server" Text="Vendor Details Saved Successfully"></asp:Label>
+    </div>
+    <div class="container">
+        <div class="row">
+            <h2><b>Statistics</b></h2>
+        </div>
+        <div class="row" style="background-color: gainsboro; border-radius: 6px;height:645px">
+            <div class="col-md-12" style="margin-top: 10px; margin-bottom: 10px;">
+                <div class="col-md-6" id="piechart_3d"></div>
+                <div class="col-md-6">
+                    <div style="width: 540px; height: 300px; background-color: white;text-align:center">
+                        Tool 2
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12" style="margin-top: 320px; margin-bottom: 10px;">
+                <div class="col-md-4">
+                    <div style="width: 360px; height: 300px; background-color: white;text-align:center">
+                        Tool 3
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div style="width: 360px; height: 300px; background-color: white;text-align:center">
+                        Tool 4
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div style="width: 360px; height: 300px; background-color: white;text-align:center">
+                        Tool 5
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load("current", { packages: ["corechart"] });
+        google.charts.setOnLoadCallback(drawChart);
+        function drawChart() {
+            //  alert($(<%=hdnGoods.ClientID %>).val());
+          var data = google.visualization.arrayToDataTable([
+            ['Classification', 'Count'],
+            ['Goods', parseInt($(<%=hdnGoods.ClientID %>).val())],
+          ['Services', parseInt($(<%=hdnServices.ClientID %>).val())],
+          ['PT', parseInt($(<%=hdnPT.ClientID %>).val())],
+          ['Construction', parseInt($(<%=hdnConstruction.ClientID %>).val())]
+        ]);
+
+        var options = {
+            title: 'Vendor Categories',
+            is3D: true,
+            height:300,
+            width:540
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('piechart_3d'));
+        chart.draw(data, options);
+    }
+    </script>
+    <script type="text/javascript">
+        function showmessage() {
+            $("#<%=myMessage.ClientID%>").show();
+            setTimeout(function () {
+                var selectedEffect = 'blind';
+                var options = {};
+                $("#<%=myMessage.ClientID%>").hide();
+            }, 5000);
+            return false;
+        }
+    </script>
+
+</asp:Content>

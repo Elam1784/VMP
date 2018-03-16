@@ -1,0 +1,65 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class manageVendor : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                
+            }
+        }
+
+        private void loadSpecialist()
+        {
+            string qur = "Exec [proc_getUserList]";
+            DataSet ds = dbLibrary.idGetCustomResult(qur);
+            ddlSpecialist.DataSource = ds;
+            ddlSpecialist.DataTextField = "Name";
+            ddlSpecialist.DataValueField = "userId";
+            ddlSpecialist.DataBind();
+        }
+
+        protected void radSearchVN_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radSearchVN.Checked)
+            {
+                divSearchV.Attributes.Add("style", "display:block");
+                divSearchS.Attributes.Add("style", "display:none");
+            }
+            else
+            {
+                divSearchV.Attributes.Add("style", "display:none");
+                divSearchS.Attributes.Add("style", "display:block");
+            }
+        }
+
+        protected void radSearchSpecialist_CheckedChanged(object sender, EventArgs e)
+        {
+            loadSpecialist();
+            if(radSearchSpecialist.Checked)
+            {
+                divSearchS.Attributes.Add("style", "display:block");
+                divSearchV.Attributes.Add("style", "display:none");
+            }
+            else
+            {
+                divSearchS.Attributes.Add("style", "display:none");
+                divSearchV.Attributes.Add("style", "display:block");
+            }
+        }
+    }
+}

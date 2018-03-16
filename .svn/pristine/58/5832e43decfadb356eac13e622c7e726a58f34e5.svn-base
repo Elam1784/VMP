@@ -1,0 +1,168 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using VMP.Library;
+
+namespace VMP_1._0.User
+{
+    public partial class vmpUsrVendor4 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["UserId"] == null)
+            {
+                Response.Redirect("~/Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                if (Request.QueryString["VId"] != null)
+                {
+                    if (Request.QueryString["VId"].ToString().Contains("'"))
+                    {
+                        Response.Redirect("vmpUsrVendor1.aspx");
+                    }
+                    else if (!dbLibrary.isValidVendor(Request.QueryString["VId"]))
+                    {
+                        Response.Redirect("vmpUsrVendor1.aspx");
+                    }
+                    loadStepsProgress();
+                }
+            }
+        }
+
+        private void loadStepsProgress()
+        {
+            divStep1.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+            divStep2.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+            divStep3.Attributes.Add("class", "col-xs-3 bs-wizard-step complete");
+            divStep4.Attributes.Add("class", "col-xs-3 bs-wizard-step active");
+        }
+
+        protected void btnBack_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor3a.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void lnkStep1_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor1.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void lnkStep2_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor2.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void lnkStep3_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("vmpUsrVendor3.aspx?VId=" + Request.QueryString["VId"]);
+        }
+
+        protected void radCorp_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+
+        protected void radPartnership_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+
+        protected void radProprietorship_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+
+        protected void radNonProfit_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+
+        protected void radLLC_CheckedChanged(object sender, EventArgs e)
+        {
+            loadDiv();
+        }
+        private void loadDiv()
+        {
+            if (radCorp.Checked == true)
+            {
+                divArticles.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                radArticles.SelectedIndex = -1;
+                divArticles.Attributes.Add("style", "display:none");
+                divCD.Attributes.Add("style", "display:none");
+            }
+            if (radPartnership.Checked == true)
+            {
+                divPartnership.Attributes.Add("style", "display:block");
+                divCD.Attributes.Add("style", "display:none");
+            }
+            else
+            {
+                divPartnership.Attributes.Add("style", "display:none");
+            }
+            if (radProprietorship.Checked == true)
+            {
+                divProprietorship.Attributes.Add("style", "display:block");
+                divCD.Attributes.Add("style", "display:none");
+            }
+            else
+            {
+                divProprietorship.Attributes.Add("style", "display:none");
+            }
+        }
+
+        protected void radArticles_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (radArticles.Items[0].Selected)
+            {
+                divCD.Attributes.Add("style", "display:block");
+            }
+            else
+            {
+                divCD.Attributes.Add("style", "display:none");
+            }
+        }
+
+        private void loadBusinessdiv()
+        {
+            if (radMfg.Checked == true)
+            {
+                divOtherBusiness.Attributes.Add("style", "display:block");
+                radAgreements.Items[1].Selected = true;
+            }
+            else
+            {
+                radAgreements.SelectedIndex = -1;
+                divOtherBusiness.Attributes.Add("style", "display:none");
+            }
+        }
+
+        protected void radMfg_CheckedChanged(object sender, EventArgs e)
+        {
+            loadBusinessdiv();
+        }
+
+        protected void rad3rdParty_CheckedChanged(object sender, EventArgs e)
+        {
+            loadBusinessdiv();
+        }
+
+        protected void radBrokerage_CheckedChanged(object sender, EventArgs e)
+        {
+            loadBusinessdiv();
+        }
+
+        protected void radOther_CheckedChanged(object sender, EventArgs e)
+        {
+            loadBusinessdiv();
+        }
+
+    }
+}
