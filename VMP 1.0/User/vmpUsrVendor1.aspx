@@ -185,7 +185,7 @@
 
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3" style="margin-top: 5px;">
                 <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" ErrorMessage="Vendor Name cannot be empty" Style="color: red; margin-left: 15px;" ControlToValidate="txtVName" ValidationGroup="vd"></asp:RequiredFieldValidator>
             </div>
         </div>
@@ -412,7 +412,9 @@
                         </div>
                     </div>
 
-                    <div class="col-md-3"></div>
+                    <div class="col-md-3" style="margin-top: 5px;">
+                <asp:RequiredFieldValidator ID="RequiredFieldValidator3" runat="server" ErrorMessage="Please select county" Style="color: red; margin-left: 15px;" InitialValue="-1" ControlToValidate="ddlCounty" ValidationGroup="vd"></asp:RequiredFieldValidator>
+                    </div>
                 </div>
                 <div class="row" id="divEdr" runat="server" style="margin-bottom: 15px; display: none;">
                     <div class="col-md-3"></div>
